@@ -30,7 +30,7 @@ def test_every_fb_term_used_is_defined_in_the_ontology(cfg, data_dir, tmp_path):
 def test_vocabulary_check_detects_unknown_term(tmp_path):
     f = tmp_path / "x.ttl"
     f.write_text("<http://x/a> fb:notDefinedAnywhere 1 .\n", encoding="utf-8")
-    assert check_vocabulary(ONT, [f], "https://example.org/football/ontology#") == {"notDefinedAnywhere"}
+    assert check_vocabulary(ONT, [f], "https://vdhugn.github.io/Football-LOD/ontology#") == {"notDefinedAnywhere"}
 
 
 def test_output_is_deterministic(cfg, data_dir, tmp_path):

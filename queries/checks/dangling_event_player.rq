@@ -1,4 +1,4 @@
-PREFIX fb: <https://example.org/football/ontology#>
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
 SELECT (COUNT(*) AS ?n) WHERE {
   ?e a ?cls ; fb:byPlayer ?p . FILTER(?cls IN (fb:Goal, fb:Card, fb:Substitution, fb:PenaltyShootoutKick))
   FILTER NOT EXISTS { ?p a fb:Player }

@@ -12,8 +12,8 @@ from helpers import write_mini  # noqa: E402
 @pytest.fixture
 def cfg():
     return {
-        "ontology_base": "https://example.org/football/ontology#",
-        "resource_base": "https://example.org/football/resource/",
+        "ontology_base": "https://vdhugn.github.io/Football-LOD/ontology#",
+        "resource_base": "https://vdhugn.github.io/Football-LOD/resource/",
         "competitions": [
             {"id": "GB1", "kind": "club", "seasons": [2023]},
             {"id": "FIWC", "kind": "national", "seasons": [2025]},

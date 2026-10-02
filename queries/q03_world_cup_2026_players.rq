@@ -1,5 +1,5 @@
-PREFIX fb: <https://example.org/football/ontology#>
-PREFIX fbr: <https://example.org/football/resource/>
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
+PREFIX fbr: <https://vdhugn.github.io/Football-LOD/resource/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 # World Cup 2026 players with their national team and current club

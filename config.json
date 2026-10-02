@@ -1,6 +1,6 @@
 {
-  "ontology_base": "https://example.org/football/ontology#",
-  "resource_base": "https://example.org/football/resource/",
+  "ontology_base": "https://vdhugn.github.io/Football-LOD/ontology#",
+  "resource_base": "https://vdhugn.github.io/Football-LOD/resource/",
   "data_dir": "datasets",
   "out_dir": "output",
   "cache_dir": ".cache",

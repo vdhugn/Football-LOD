@@ -1,5 +1,5 @@
-@prefix fb:   <https://example.org/football/ontology#> .
-@prefix fbs:  <https://example.org/football/shapes#> .
+@prefix fb:   <https://vdhugn.github.io/Football-LOD/ontology#> .
+@prefix fbs:  <https://vdhugn.github.io/Football-LOD/shapes#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 

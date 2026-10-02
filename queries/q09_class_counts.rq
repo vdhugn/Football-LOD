@@ -1,4 +1,4 @@
-PREFIX fb: <https://example.org/football/ontology#>
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
 # Instances per ontology class, plus the number of owl:sameAs links

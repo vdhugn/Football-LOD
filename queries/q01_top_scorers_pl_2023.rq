@@ -1,5 +1,5 @@
-PREFIX fb: <https://example.org/football/ontology#>
-PREFIX fbr: <https://example.org/football/resource/>
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
+PREFIX fbr: <https://vdhugn.github.io/Football-LOD/resource/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 # Top 10 scorers of the 2023 Premier League season

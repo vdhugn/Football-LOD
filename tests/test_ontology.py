@@ -2,7 +2,7 @@ from pathlib import Path
 
 from rdflib import Graph, Namespace, RDF, RDFS, OWL
 
-FB = Namespace("https://example.org/football/ontology#")
+FB = Namespace("https://vdhugn.github.io/Football-LOD/ontology#")
 ONT = Path(__file__).resolve().parents[1] / "ontology" / "football.ttl"
 
 CLASSES = ["Team", "Club", "NationalTeam", "Player", "Match", "Competition", "Country", "Stadium",

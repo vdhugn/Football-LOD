@@ -3,8 +3,8 @@ from pathlib import Path
 
 from rdflib import Graph
 
-FB = "https://example.org/football/ontology#"
-R = "https://example.org/football/resource/"
+FB = "https://vdhugn.github.io/Football-LOD/ontology#"
+R = "https://vdhugn.github.io/Football-LOD/resource/"
 
 HEADERS = {
     "countries.csv": ["country_id", "country_name", "country_code", "confederation", "total_clubs", "total_players", "average_age", "url"],
