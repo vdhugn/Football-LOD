@@ -1,0 +1,35 @@
+@prefix fb:   <https://example.org/football/ontology#> .
+@prefix fbs:  <https://example.org/football/shapes#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+fbs:MatchShape a sh:NodeShape ;
+    sh:targetClass fb:Match ;
+    sh:property [ sh:path fb:homeTeam ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Team ] ;
+    sh:property [ sh:path fb:awayTeam ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Team ] ;
+    sh:property [ sh:path fb:inCompetition ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Competition ] ;
+    sh:property [ sh:path fb:matchDate ; sh:maxCount 1 ; sh:datatype xsd:date ] .
+
+fbs:AppearanceShape a sh:NodeShape ;
+    sh:targetClass fb:Appearance ;
+    sh:property [ sh:path fb:appearanceOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Player ] ;
+    sh:property [ sh:path fb:inMatch ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Match ] ;
+    sh:property [ sh:path fb:forTeam ; sh:maxCount 1 ; sh:class fb:Team ] .
+
+fbs:EventShape a sh:NodeShape ;
+    sh:targetClass fb:MatchEvent ;
+    sh:property [ sh:path fb:inMatch ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Match ] ;
+    sh:property [ sh:path fb:byPlayer ; sh:maxCount 1 ; sh:class fb:Player ] .
+
+fbs:TransferShape a sh:NodeShape ;
+    sh:targetClass fb:Transfer ;
+    sh:property [ sh:path fb:transferOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Player ] ;
+    sh:property [ sh:path fb:fromClub ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Club ] ;
+    sh:property [ sh:path fb:toClub ; sh:minCount 1 ; sh:maxCount 1 ; sh:class fb:Club ] ;
+    sh:property [ sh:path fb:transferDate ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fb:transferFee ; sh:maxCount 1 ; sh:minExclusive 0 ] .
+
+fbs:PlayerShape a sh:NodeShape ;
+    sh:targetClass fb:Player ;
+    sh:property [ sh:path fb:dateOfBirth ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path fb:heightCm ; sh:maxCount 1 ; sh:datatype xsd:integer ] .
