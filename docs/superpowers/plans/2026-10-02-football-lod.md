@@ -2496,7 +2496,7 @@ def load_all(out):
 
 def shacl(data, ont):
     shapes = Graph().parse(str(ROOT / "shapes" / "football-shapes.ttl"), format="turtle")
-    conforms, _, text = validate(data, shacl_graph=shapes, ont_graph=ont, inference="rdfs")
+    conforms, _, text = validate(data, shacl_graph=shapes, ont_graph=ont, inference=None)
     return conforms, text
 
 
