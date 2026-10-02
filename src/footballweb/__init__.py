@@ -1,0 +1,1 @@
+"""Football LOD web application."""
