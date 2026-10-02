@@ -1,0 +1,10 @@
+datasets
+output
+.cache
+.venv
+.git
+.superpowers
+__pycache__
+*.pyc
+tests
+docs

@@ -1,0 +1,10 @@
+FROM python:3.12-slim
+WORKDIR /app
+RUN pip install --no-cache-dir "flask>=3.0" "gunicorn>=22.0" "rdflib>=7.0"
+COPY src ./src
+COPY ontology ./ontology
+COPY queries ./queries
+COPY config.json ./config.json
+ENV PYTHONPATH=/app/src FUSEKI_URL=http://fuseki:3030/football
+EXPOSE 8000
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "2", "--timeout", "90", "footballweb:create_app()"]

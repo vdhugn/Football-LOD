@@ -15,6 +15,27 @@ The CSVs go in `datasets/` (git-ignored).
 - Endpoint: <http://localhost:3030/football/sparql> (web UI at <http://localhost:3030/>)
 - Terminal: `scripts/query.sh queries/q01_top_scorers_pl_2023.rq` (CSV by default; pass a MIME type as 2nd argument for other formats)
 
+## Web application
+
+`make web` starts the web app on <http://localhost:8000> (it needs Fuseki, see Quick start). `docker compose up -d` starts both services; the container reads `FUSEKI_URL` (default `http://localhost:3030/football`).
+
+| Route | What it does |
+|---|---|
+| `/` | search box and the nine example queries |
+| `/search?q=messi` | players, clubs, national teams, competitions and countries by name |
+| `/page/<kind>/<id>` | entity page: properties, links to Wikidata/DBpedia/GeoNames, transfers, market values, squad |
+| `/resource/<kind>/<id>` | Linked Data URI: `303` to the HTML page for browsers, to Turtle, JSON-LD, RDF/XML or N-Triples for clients that ask for them |
+| `/ontology` | the ontology as HTML or RDF |
+| `/query` | SPARQL playground (CodeMirror editor, example queries, CSV/JSON download) |
+
+```bash
+curl -L -H "Accept: text/turtle" http://localhost:8000/resource/player/28003
+```
+
+### Namespace
+
+Resources live under `https://vdhugn.github.io/Football-LOD/resource/` and the ontology under `https://vdhugn.github.io/Football-LOD/ontology#`. GitHub Pages only serves static files, so opening these URIs at github.io does not return data by itself. The app serves exactly the same paths, so the URIs resolve once the app is reachable under that namespace (own domain, w3id.org redirect or reverse proxy); locally `http://localhost:8000/resource/...` maps to the canonical URIs stored in the endpoint. The base URIs are set in `config.json`; changing them means rebuilding the data (`make build links load`).
+
 ## Scope
 
 GB1, ES1, IT1, L1, FR1, CL and EL for seasons 2012–2025; FIWC (all six World Cups in the source). Edit `config.json` to narrow or widen it.
@@ -29,7 +50,7 @@ GB1, ES1, IT1, L1, FR1, CL and EL for seasons 2012–2025; FIWC (all six World C
   clubs listed in `clubs.csv` 753 of 791 (95.2%; 26.2% of all clubs because of the minimal nodes),
   countries 167 of 208 names (80.3%), stadiums 261 of 760 (`skos:closeMatch`).
   Only unambiguous one-to-one Transfermarkt-ID / Wikidata-item pairs become links; 24 clubs with ambiguous IDs are skipped (see `ambiguous` in `report.json`).
-- Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 60 unit tests pass.
+- Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 118 unit tests pass.
 - Build is deterministic (two runs are byte-identical); relinking runs offline from `.cache/wikidata/` in under a second.
 
 ## Ontology
@@ -129,6 +150,7 @@ classDiagram
 |---|---|
 | `ontology/football.ttl` | ontology (English only) |
 | `src/` | scope selection, builders, Wikidata linking, vocabulary check |
+| `src/footballweb/` | Flask web app (entity pages, content negotiation, ontology page, SPARQL playground) |
 | `shapes/football-shapes.ttl` | SHACL shapes |
 | `queries/` | nine competency queries; `queries/checks/` has dangling-reference checks |
 | `scripts/` | `load.sh` (load + start Fuseki), `query.sh`, `run_checks.sh`, `shacl.sh` |
@@ -143,6 +165,6 @@ classDiagram
 - Stadium links are lower precision than the other links and use `skos:closeMatch`.
 - Managers are modelled as nodes keyed by name and are not linked externally.
 
-## Not yet built
+## Not built
 
-A web UI for querying (planned as a separate cycle).
+A statistics dashboard, authentication and rate limiting, and a public deployment of the web app (so the github.io URIs do not resolve on their own yet).
