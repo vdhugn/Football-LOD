@@ -1,0 +1,118 @@
+@prefix fb:     <https://example.org/football/ontology#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:    <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix foaf:   <http://xmlns.com/foaf/0.1/> .
+@prefix schema: <https://schema.org/> .
+
+<https://example.org/football/ontology> a owl:Ontology ;
+    rdfs:label "Football ontology"@en ;
+    rdfs:comment "Vocabulary for clubs, national teams, players, matches, appearances, events, transfers and market valuations, derived from Transfermarkt data."@en .
+
+# ---------------- Classes ----------------
+fb:Team a owl:Class ; rdfs:subClassOf schema:SportsTeam ; rdfs:label "Team"@en ; rdfs:comment "A club or a national team."@en .
+fb:Club a owl:Class ; rdfs:subClassOf fb:Team ; rdfs:label "Club"@en ; rdfs:comment "A football club."@en .
+fb:NationalTeam a owl:Class ; rdfs:subClassOf fb:Team ; rdfs:label "National team"@en ; rdfs:comment "A national football team."@en .
+fb:Player a owl:Class ; rdfs:subClassOf foaf:Person , schema:Person ; rdfs:label "Player"@en ; rdfs:comment "A football player."@en .
+fb:Match a owl:Class ; rdfs:subClassOf schema:SportsEvent ; rdfs:label "Match"@en ; rdfs:comment "A football match between two teams."@en .
+fb:Competition a owl:Class ; rdfs:subClassOf schema:SportsOrganization ; rdfs:label "Competition"@en ; rdfs:comment "A league, cup or tournament."@en .
+fb:Country a owl:Class ; rdfs:subClassOf schema:Country ; rdfs:label "Country"@en ; rdfs:comment "A country or football nation."@en .
+fb:Stadium a owl:Class ; rdfs:subClassOf schema:StadiumOrArena ; rdfs:label "Stadium"@en ; rdfs:comment "A football stadium."@en .
+fb:Referee a owl:Class ; rdfs:label "Referee"@en ; rdfs:comment "A match referee."@en .
+fb:Manager a owl:Class ; rdfs:label "Manager"@en ; rdfs:comment "A coach or manager of a team."@en .
+fb:Position a owl:Class ; rdfs:label "Position"@en ; rdfs:comment "A playing position, modelled as a SKOS concept; sub-positions are skos:broader than their position."@en .
+fb:Season a owl:Class ; rdfs:label "Season"@en ; rdfs:comment "A season, identified by its start year in the source data."@en .
+fb:MatchEvent a owl:Class ; rdfs:label "Match event"@en ; rdfs:comment "Something that happened during a match."@en .
+fb:Goal a owl:Class ; rdfs:subClassOf fb:MatchEvent ; rdfs:label "Goal"@en ; rdfs:comment "A goal event."@en .
+fb:Card a owl:Class ; rdfs:subClassOf fb:MatchEvent ; rdfs:label "Card"@en ; rdfs:comment "A yellow, second yellow or red card event."@en .
+fb:Substitution a owl:Class ; rdfs:subClassOf fb:MatchEvent ; rdfs:label "Substitution"@en ; rdfs:comment "A substitution event."@en .
+fb:PenaltyShootoutKick a owl:Class ; rdfs:subClassOf fb:MatchEvent ; rdfs:label "Penalty shootout kick"@en ; rdfs:comment "A kick taken in a penalty shootout."@en .
+fb:Appearance a owl:Class ; rdfs:label "Appearance"@en ; rdfs:comment "A player's participation in one match (n-ary relation between player, match and team)."@en .
+fb:Transfer a owl:Class ; rdfs:label "Transfer"@en ; rdfs:comment "A transfer of a player between two clubs on a date."@en .
+fb:MarketValuation a owl:Class ; rdfs:label "Market valuation"@en ; rdfs:comment "A dated estimate of a player's market value."@en .
+
+[] a owl:AllDisjointClasses ; owl:members ( fb:Club fb:NationalTeam ) .
+[] a owl:AllDisjointClasses ; owl:members ( fb:Player fb:Team fb:Match fb:Competition fb:Country fb:Stadium fb:Season fb:Appearance fb:Transfer fb:MarketValuation fb:MatchEvent ) .
+
+# ---------------- Object properties ----------------
+fb:playsFor a owl:ObjectProperty ; rdfs:label "plays for"@en ; rdfs:comment "The club a player currently belongs to."@en ; rdfs:domain fb:Player ; rdfs:range fb:Club .
+fb:hasPlayer a owl:ObjectProperty ; owl:inverseOf fb:playsFor ; rdfs:label "has player"@en ; rdfs:comment "Inverse of plays for. Not materialised in the data."@en .
+fb:citizenOf a owl:ObjectProperty ; rdfs:label "citizen of"@en ; rdfs:comment "Country of citizenship."@en ; rdfs:domain fb:Player ; rdfs:range fb:Country .
+fb:bornIn a owl:ObjectProperty ; rdfs:label "born in"@en ; rdfs:comment "Country of birth."@en ; rdfs:domain fb:Player ; rdfs:range fb:Country .
+fb:representsNationalTeam a owl:ObjectProperty ; rdfs:label "represents national team"@en ; rdfs:comment "The national team the player currently plays for."@en ; rdfs:domain fb:Player ; rdfs:range fb:NationalTeam .
+fb:position a owl:ObjectProperty ; rdfs:label "position"@en ; rdfs:comment "General playing position."@en ; rdfs:domain fb:Player ; rdfs:range fb:Position .
+fb:subPosition a owl:ObjectProperty ; rdfs:label "sub-position"@en ; rdfs:comment "Specific playing position."@en ; rdfs:domain fb:Player ; rdfs:range fb:Position .
+fb:homeTeam a owl:ObjectProperty ; rdfs:subPropertyOf schema:homeTeam ; rdfs:label "home team"@en ; rdfs:comment "Home team of a match."@en ; rdfs:domain fb:Match ; rdfs:range fb:Team .
+fb:awayTeam a owl:ObjectProperty ; rdfs:subPropertyOf schema:awayTeam ; rdfs:label "away team"@en ; rdfs:comment "Away team of a match."@en ; rdfs:domain fb:Match ; rdfs:range fb:Team .
+fb:inCompetition a owl:ObjectProperty ; rdfs:label "in competition"@en ; rdfs:comment "Competition a match belongs to."@en ; rdfs:domain fb:Match ; rdfs:range fb:Competition .
+fb:inSeason a owl:ObjectProperty ; rdfs:label "in season"@en ; rdfs:comment "Season a match belongs to."@en ; rdfs:domain fb:Match ; rdfs:range fb:Season .
+fb:hostedAt a owl:ObjectProperty ; rdfs:label "hosted at"@en ; rdfs:comment "Stadium where a match was played."@en ; rdfs:domain fb:Match ; rdfs:range fb:Stadium .
+fb:refereedBy a owl:ObjectProperty ; rdfs:label "refereed by"@en ; rdfs:comment "Referee of a match."@en ; rdfs:domain fb:Match ; rdfs:range fb:Referee .
+fb:country a owl:ObjectProperty ; rdfs:label "country"@en ; rdfs:comment "Country a team or competition belongs to."@en ; rdfs:range fb:Country .
+fb:homeStadium a owl:ObjectProperty ; rdfs:label "home stadium"@en ; rdfs:comment "Home stadium of a club."@en ; rdfs:domain fb:Club ; rdfs:range fb:Stadium .
+fb:managedBy a owl:ObjectProperty ; rdfs:label "managed by"@en ; rdfs:comment "Current manager of a team."@en ; rdfs:domain fb:Team ; rdfs:range fb:Manager .
+fb:domesticCompetition a owl:ObjectProperty ; rdfs:label "domestic competition"@en ; rdfs:comment "Domestic league a club plays in."@en ; rdfs:domain fb:Club ; rdfs:range fb:Competition .
+fb:appearanceOf a owl:ObjectProperty ; rdfs:label "appearance of"@en ; rdfs:comment "The player who made the appearance."@en ; rdfs:domain fb:Appearance ; rdfs:range fb:Player .
+fb:inMatch a owl:ObjectProperty ; rdfs:label "in match"@en ; rdfs:comment "The match an appearance or event belongs to."@en ; rdfs:range fb:Match .
+fb:forTeam a owl:ObjectProperty ; rdfs:label "for team"@en ; rdfs:comment "The team an appearance or event is attributed to."@en ; rdfs:range fb:Team .
+fb:byPlayer a owl:ObjectProperty ; rdfs:label "by player"@en ; rdfs:comment "The player an event is about."@en ; rdfs:domain fb:MatchEvent ; rdfs:range fb:Player .
+fb:assistedBy a owl:ObjectProperty ; rdfs:label "assisted by"@en ; rdfs:comment "The player who assisted a goal."@en ; rdfs:domain fb:Goal ; rdfs:range fb:Player .
+fb:playerIn a owl:ObjectProperty ; rdfs:label "player in"@en ; rdfs:comment "The player who came on."@en ; rdfs:domain fb:Substitution ; rdfs:range fb:Player .
+fb:playerOut a owl:ObjectProperty ; rdfs:label "player out"@en ; rdfs:comment "The player who went off."@en ; rdfs:domain fb:Substitution ; rdfs:range fb:Player .
+fb:transferOf a owl:ObjectProperty ; rdfs:label "transfer of"@en ; rdfs:comment "The player being transferred."@en ; rdfs:domain fb:Transfer ; rdfs:range fb:Player .
+fb:fromClub a owl:ObjectProperty ; rdfs:label "from club"@en ; rdfs:comment "Club the player left."@en ; rdfs:domain fb:Transfer ; rdfs:range fb:Club .
+fb:toClub a owl:ObjectProperty ; rdfs:label "to club"@en ; rdfs:comment "Club the player joined."@en ; rdfs:domain fb:Transfer ; rdfs:range fb:Club .
+fb:valuationOf a owl:ObjectProperty ; rdfs:label "valuation of"@en ; rdfs:comment "The player being valued."@en ; rdfs:domain fb:MarketValuation ; rdfs:range fb:Player .
+fb:atClub a owl:ObjectProperty ; rdfs:label "at club"@en ; rdfs:comment "Club the player belonged to at valuation time."@en ; rdfs:domain fb:MarketValuation ; rdfs:range fb:Club .
+
+# ---------------- Datatype properties ----------------
+fb:firstName a owl:DatatypeProperty ; rdfs:subPropertyOf schema:givenName ; rdfs:label "first name"@en ; rdfs:comment "Given name."@en ; rdfs:domain fb:Player ; rdfs:range xsd:string .
+fb:lastName a owl:DatatypeProperty ; rdfs:subPropertyOf schema:familyName ; rdfs:label "last name"@en ; rdfs:comment "Family name."@en ; rdfs:domain fb:Player ; rdfs:range xsd:string .
+fb:dateOfBirth a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:subPropertyOf schema:birthDate ; rdfs:label "date of birth"@en ; rdfs:comment "Date of birth."@en ; rdfs:domain fb:Player ; rdfs:range xsd:date .
+fb:birthCity a owl:DatatypeProperty ; rdfs:label "birth city"@en ; rdfs:comment "City of birth as free text."@en ; rdfs:domain fb:Player ; rdfs:range xsd:string .
+fb:heightCm a owl:DatatypeProperty ; rdfs:label "height (cm)"@en ; rdfs:comment "Height in centimetres."@en ; rdfs:domain fb:Player ; rdfs:range xsd:integer .
+fb:preferredFoot a owl:DatatypeProperty ; rdfs:label "preferred foot"@en ; rdfs:comment "left, right or both."@en ; rdfs:domain fb:Player ; rdfs:range xsd:string .
+fb:internationalCaps a owl:DatatypeProperty ; rdfs:label "international caps"@en ; rdfs:comment "Number of international appearances."@en ; rdfs:domain fb:Player ; rdfs:range xsd:integer .
+fb:internationalGoals a owl:DatatypeProperty ; rdfs:label "international goals"@en ; rdfs:comment "Number of international goals."@en ; rdfs:domain fb:Player ; rdfs:range xsd:integer .
+fb:contractExpires a owl:DatatypeProperty ; rdfs:label "contract expires"@en ; rdfs:comment "Contract expiration date."@en ; rdfs:domain fb:Player ; rdfs:range xsd:date .
+fb:agent a owl:DatatypeProperty ; rdfs:label "agent"@en ; rdfs:comment "Name of the player's agent."@en ; rdfs:domain fb:Player ; rdfs:range xsd:string .
+fb:currentMarketValueEUR a owl:DatatypeProperty ; rdfs:label "current market value (EUR)"@en ; rdfs:comment "Latest market value in euros."@en ; rdfs:domain fb:Player ; rdfs:range xsd:decimal .
+fb:highestMarketValueEUR a owl:DatatypeProperty ; rdfs:label "highest market value (EUR)"@en ; rdfs:comment "Highest market value ever recorded, in euros."@en ; rdfs:domain fb:Player ; rdfs:range xsd:decimal .
+fb:matchDate a owl:DatatypeProperty ; rdfs:label "match date"@en ; rdfs:comment "Date a match was played."@en ; rdfs:domain fb:Match ; rdfs:range xsd:date .
+fb:round a owl:DatatypeProperty ; rdfs:label "round"@en ; rdfs:comment "Round or matchday label."@en ; rdfs:domain fb:Match ; rdfs:range xsd:string .
+fb:homeScore a owl:DatatypeProperty ; rdfs:label "home score"@en ; rdfs:comment "Goals scored by the home team."@en ; rdfs:domain fb:Match ; rdfs:range xsd:integer .
+fb:awayScore a owl:DatatypeProperty ; rdfs:label "away score"@en ; rdfs:comment "Goals scored by the away team."@en ; rdfs:domain fb:Match ; rdfs:range xsd:integer .
+fb:attendance a owl:DatatypeProperty ; rdfs:label "attendance"@en ; rdfs:comment "Number of spectators."@en ; rdfs:domain fb:Match ; rdfs:range xsd:integer .
+fb:homeFormation a owl:DatatypeProperty ; rdfs:label "home formation"@en ; rdfs:comment "Formation of the home team."@en ; rdfs:domain fb:Match ; rdfs:range xsd:string .
+fb:awayFormation a owl:DatatypeProperty ; rdfs:label "away formation"@en ; rdfs:comment "Formation of the away team."@en ; rdfs:domain fb:Match ; rdfs:range xsd:string .
+fb:startYear a owl:DatatypeProperty ; rdfs:label "start year"@en ; rdfs:comment "Start year of a season as coded in the source."@en ; rdfs:domain fb:Season ; rdfs:range xsd:integer .
+fb:stadiumSeats a owl:DatatypeProperty ; rdfs:label "stadium seats"@en ; rdfs:comment "Seating capacity."@en ; rdfs:domain fb:Stadium ; rdfs:range xsd:integer .
+fb:countryCode a owl:DatatypeProperty ; rdfs:label "country code"@en ; rdfs:comment "Transfermarkt country code."@en ; rdfs:domain fb:Country ; rdfs:range xsd:string .
+fb:confederation a owl:DatatypeProperty ; rdfs:label "confederation"@en ; rdfs:comment "Football confederation."@en ; rdfs:range xsd:string .
+fb:competitionType a owl:DatatypeProperty ; rdfs:label "competition type"@en ; rdfs:comment "domestic_league, domestic_cup, international_cup, national_team_competition or other."@en ; rdfs:domain fb:Competition ; rdfs:range xsd:string .
+fb:competitionCode a owl:DatatypeProperty ; rdfs:label "competition code"@en ; rdfs:comment "Transfermarkt competition code."@en ; rdfs:domain fb:Competition ; rdfs:range xsd:string .
+fb:fifaRanking a owl:DatatypeProperty ; rdfs:label "FIFA ranking"@en ; rdfs:comment "FIFA world ranking of a national team."@en ; rdfs:domain fb:NationalTeam ; rdfs:range xsd:integer .
+fb:squadSize a owl:DatatypeProperty ; rdfs:label "squad size"@en ; rdfs:comment "Number of players in the squad."@en ; rdfs:domain fb:Team ; rdfs:range xsd:integer .
+fb:averageAge a owl:DatatypeProperty ; rdfs:label "average age"@en ; rdfs:comment "Average age of the squad."@en ; rdfs:domain fb:Team ; rdfs:range xsd:decimal .
+fb:foreignersNumber a owl:DatatypeProperty ; rdfs:label "foreigners number"@en ; rdfs:comment "Number of foreign players in the squad."@en ; rdfs:domain fb:Team ; rdfs:range xsd:integer .
+fb:foreignersPercentage a owl:DatatypeProperty ; rdfs:label "foreigners percentage"@en ; rdfs:comment "Share of foreign players in the squad."@en ; rdfs:domain fb:Team ; rdfs:range xsd:decimal .
+fb:nationalTeamPlayers a owl:DatatypeProperty ; rdfs:label "national team players"@en ; rdfs:comment "Number of squad members with national team caps."@en ; rdfs:domain fb:Club ; rdfs:range xsd:integer .
+fb:totalMarketValueEUR a owl:DatatypeProperty ; rdfs:label "total market value (EUR)"@en ; rdfs:comment "Squad market value in euros."@en ; rdfs:domain fb:Team ; rdfs:range xsd:decimal .
+fb:netTransferRecordEUR a owl:DatatypeProperty ; rdfs:label "net transfer record (EUR)"@en ; rdfs:comment "Net transfer spending balance in euros (negative = net spend)."@en ; rdfs:domain fb:Club ; rdfs:range xsd:decimal .
+fb:lastSeason a owl:DatatypeProperty ; rdfs:label "last season"@en ; rdfs:comment "Latest season for which the team data was scraped."@en ; rdfs:domain fb:Team ; rdfs:range xsd:integer .
+fb:goals a owl:DatatypeProperty ; rdfs:label "goals"@en ; rdfs:comment "Goals scored in an appearance."@en ; rdfs:domain fb:Appearance ; rdfs:range xsd:integer .
+fb:assists a owl:DatatypeProperty ; rdfs:label "assists"@en ; rdfs:comment "Assists in an appearance."@en ; rdfs:domain fb:Appearance ; rdfs:range xsd:integer .
+fb:minutesPlayed a owl:DatatypeProperty ; rdfs:label "minutes played"@en ; rdfs:comment "Minutes played in an appearance."@en ; rdfs:domain fb:Appearance ; rdfs:range xsd:integer .
+fb:yellowCards a owl:DatatypeProperty ; rdfs:label "yellow cards"@en ; rdfs:comment "Yellow cards received in an appearance."@en ; rdfs:domain fb:Appearance ; rdfs:range xsd:integer .
+fb:redCards a owl:DatatypeProperty ; rdfs:label "red cards"@en ; rdfs:comment "Red cards received in an appearance."@en ; rdfs:domain fb:Appearance ; rdfs:range xsd:integer .
+fb:minute a owl:DatatypeProperty ; rdfs:label "minute"@en ; rdfs:comment "Match minute of an event."@en ; rdfs:domain fb:MatchEvent ; rdfs:range xsd:integer .
+fb:cardType a owl:DatatypeProperty ; rdfs:label "card type"@en ; rdfs:comment "Yellow card, Second yellow or Red card."@en ; rdfs:domain fb:Card ; rdfs:range xsd:string .
+fb:scored a owl:DatatypeProperty ; rdfs:label "scored"@en ; rdfs:comment "Whether a shootout kick was scored."@en ; rdfs:domain fb:PenaltyShootoutKick ; rdfs:range xsd:boolean .
+fb:transferDate a owl:DatatypeProperty ; rdfs:label "transfer date"@en ; rdfs:comment "Date of the transfer."@en ; rdfs:domain fb:Transfer ; rdfs:range xsd:date .
+fb:transferSeason a owl:DatatypeProperty ; rdfs:label "transfer season"@en ; rdfs:comment "Season label such as 23/24."@en ; rdfs:domain fb:Transfer ; rdfs:range xsd:string .
+fb:transferFee a owl:DatatypeProperty ; rdfs:label "transfer fee (EUR)"@en ; rdfs:comment "Transfer fee in euros; only present when positive."@en ; rdfs:domain fb:Transfer ; rdfs:range xsd:decimal .
+fb:marketValueAtTransferEUR a owl:DatatypeProperty ; rdfs:label "market value at transfer (EUR)"@en ; rdfs:comment "Market value when the transfer happened."@en ; rdfs:domain fb:Transfer ; rdfs:range xsd:decimal .
+fb:valuationDate a owl:DatatypeProperty ; rdfs:label "valuation date"@en ; rdfs:comment "Date of a market valuation."@en ; rdfs:domain fb:MarketValuation ; rdfs:range xsd:date .
+fb:valueEUR a owl:DatatypeProperty ; rdfs:label "value (EUR)"@en ; rdfs:comment "Valuation in euros."@en ; rdfs:domain fb:MarketValuation ; rdfs:range xsd:decimal .
