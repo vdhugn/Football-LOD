@@ -1,0 +1,17 @@
+{
+  "ontology_base": "https://example.org/football/ontology#",
+  "resource_base": "https://example.org/football/resource/",
+  "data_dir": "datasets",
+  "out_dir": "output",
+  "cache_dir": ".cache",
+  "competitions": [
+    {"id": "GB1", "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "ES1", "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "IT1", "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "L1",  "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "FR1", "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "CL",  "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "EL",  "kind": "club", "seasons": {"from": 2012, "to": 2025}},
+    {"id": "FIWC", "kind": "national", "seasons": [2005, 2009, 2013, 2017, 2021, 2025]}
+  ]
+}
