@@ -22,7 +22,7 @@ GB1, ES1, IT1, L1, FR1, CL and EL for seasons 2012–2025; FIWC (all six World C
 
 ## Results of the last run
 
-- Data: 14,180,422 triples (appearances 7.5M, events 3.1M, valuations 2.0M, transfers 0.6M, matches 0.48M, players 0.44M); Fuseki holds 14,232,530 triples including ontology and links.
+- Data: 14,180,422 triples (appearances 7.5M, events 3.1M, valuations 2.0M, transfers 0.6M, matches 0.48M, players 0.44M); Fuseki holds 14,232,449 triples including ontology and links.
 - In scope: 30,132 games, 25,482 players, 10,671 clubs (791 of them described in `clubs.csv`, the rest are minimal nodes from transfer history), 135 national teams.
 - Links (`output/links/report.json`):
   players 23,287 of 25,482 (91.4%), national teams 135 of 135, competitions 8 of 8,
