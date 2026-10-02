@@ -1,0 +1,12 @@
+services:
+  fuseki:
+    build: ./docker
+    ports:
+      - "3030:3030"
+    volumes:
+      - tdb:/data
+      - ./output:/import/output:ro
+      - ./ontology:/import/ontology:ro
+      - ./shapes:/import/shapes:ro
+volumes:
+  tdb:

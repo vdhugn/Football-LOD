@@ -1,0 +1,9 @@
+PREFIX fb: <https://example.org/football/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# 10 most expensive transfers in the dataset
+SELECT ?player ?from ?to ?date ?fee WHERE {
+  ?t a fb:Transfer ; fb:transferOf ?p ; fb:fromClub ?f ; fb:toClub ?c ;
+     fb:transferDate ?date ; fb:transferFee ?fee .
+  ?p rdfs:label ?player . ?f rdfs:label ?from . ?c rdfs:label ?to .
+} ORDER BY DESC(?fee) LIMIT 10

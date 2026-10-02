@@ -1,0 +1,11 @@
+PREFIX fb: <https://example.org/football/ontology#>
+PREFIX fbr: <https://example.org/football/resource/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Ten biggest winning margins in the Champions League
+SELECT ?home ?away ?hs ?as ?diff ?date WHERE {
+  ?m fb:inCompetition fbr:competition\/CL ; fb:homeTeam ?h ; fb:awayTeam ?a ;
+     fb:homeScore ?hs ; fb:awayScore ?as ; fb:matchDate ?date .
+  ?h rdfs:label ?home . ?a rdfs:label ?away .
+  BIND(ABS(?hs - ?as) AS ?diff)
+} ORDER BY DESC(?diff) ?date LIMIT 10

@@ -1,0 +1,5 @@
+PREFIX fb: <https://example.org/football/ontology#>
+SELECT (COUNT(*) AS ?n) WHERE {
+  ?a a fb:Appearance ; fb:inMatch ?m .
+  FILTER NOT EXISTS { ?m a fb:Match }
+}

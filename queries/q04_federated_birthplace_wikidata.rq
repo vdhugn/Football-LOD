@@ -1,0 +1,15 @@
+PREFIX fb: <https://example.org/football/ontology#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+
+# 5-star demo: for the 10 most valuable Wikidata-linked players, fetch the birth place from Wikidata
+SELECT ?name ?birthPlaceLabel WHERE {
+  { SELECT ?name ?wd WHERE {
+      ?p a fb:Player ; rdfs:label ?name ; fb:currentMarketValueEUR ?v ; owl:sameAs ?wd .
+      FILTER(STRSTARTS(STR(?wd), "http://www.wikidata.org/entity/Q"))
+    } ORDER BY DESC(?v) LIMIT 10 }
+  SERVICE <https://query.wikidata.org/sparql> {
+    ?wd wdt:P19 ?bp . ?bp rdfs:label ?birthPlaceLabel . FILTER(LANG(?birthPlaceLabel) = "en")
+  }
+}

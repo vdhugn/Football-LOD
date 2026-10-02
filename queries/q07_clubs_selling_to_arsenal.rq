@@ -1,0 +1,9 @@
+PREFIX fb: <https://example.org/football/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Transfer network: clubs that sold the most players to Arsenal FC
+SELECT ?seller (COUNT(?t) AS ?players) WHERE {
+  ?arsenal rdfs:label ?al . FILTER(STR(?al) = "Arsenal FC")
+  ?t a fb:Transfer ; fb:toClub ?arsenal ; fb:fromClub ?from .
+  ?from rdfs:label ?seller .
+} GROUP BY ?seller ORDER BY DESC(?players) LIMIT 10

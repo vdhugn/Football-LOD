@@ -1,0 +1,8 @@
+PREFIX fb: <https://example.org/football/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Market value history of Lionel Messi
+SELECT ?date ?value WHERE {
+  ?p a fb:Player ; rdfs:label ?n . FILTER(STR(?n) = "Lionel Messi")
+  ?v fb:valuationOf ?p ; fb:valuationDate ?date ; fb:valueEUR ?value .
+} ORDER BY ?date

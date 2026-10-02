@@ -1,0 +1,5 @@
+PREFIX fb: <https://example.org/football/ontology#>
+SELECT (COUNT(*) AS ?n) WHERE {
+  ?t a fb:Transfer ; ?side ?c . FILTER(?side IN (fb:fromClub, fb:toClub))
+  FILTER NOT EXISTS { ?c a fb:Club }
+}
