@@ -42,6 +42,7 @@
       var pre = document.createElement('pre');
       pre.textContent = data.turtle;
       resultEl.appendChild(pre);
+      setStatus(data.truncated ? 'Turtle truncated to the first 1,000,000 characters' : '');
     } else {
       var table = document.createElement('table');
       var head = table.createTHead().insertRow();

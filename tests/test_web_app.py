@@ -4,7 +4,7 @@ import pytest
 from rdflib import Graph
 
 from footballweb import create_app
-from footballweb.fuseki import FusekiError, FusekiUnavailable
+from footballweb.fuseki import FusekiError, FusekiFailure, FusekiUnavailable
 from helpers import FB, R
 
 PLAYER_TTL = f"""@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -200,7 +200,8 @@ def test_api_select_ask_and_graph(cfg):
     sel = api(c, "SELECT ?a ?b WHERE { ?a ?b ?c }").get_json()
     assert sel == {"form": "select", "vars": ["a", "b"], "rows": [{"a": "1", "b": None}], "truncated": False}
     assert api(c, "ASK { ?s ?p ?o }").get_json() == {"form": "ask", "boolean": True}
-    assert api(c, "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }").get_json() == {"form": "graph", "turtle": "<a> <b> <c> ."}
+    assert api(c, "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }").get_json() == {
+        "form": "graph", "turtle": "<a> <b> <c> .", "truncated": False}
 
 
 def test_api_truncates_to_1000_rows(cfg):
@@ -243,3 +244,24 @@ def test_fuseki_down_gives_clean_502_page(cfg):
         r = c.get(path)
         text = r.get_data(as_text=True)
         assert r.status_code == 502 and "SPARQL endpoint" in text and "Traceback" not in text, path
+
+
+def test_api_truncates_large_graph_results(cfg):
+    big = "<a> <b> <c> .\n" * 200000                                   # about 2.8 MB of Turtle
+    out = api(client_for(cfg, Fake(construct=big)), "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }").get_json()
+    assert out["truncated"] is True and len(out["turtle"]) == 1000000
+
+
+def test_server_errors_keep_fuseki_message_but_connection_errors_stay_generic(cfg):
+    failing = client_for(cfg, Fake(error=FusekiFailure("Query timed out in Fuseki")))
+    r = api(failing, "SELECT * WHERE { ?s ?p ?o }")
+    assert r.status_code == 502 and "Query timed out in Fuseki" in r.get_json()["error"]
+    page = failing.get("/search?q=saka").get_data(as_text=True)
+    assert "Query timed out in Fuseki" in page
+    down = api(client_for(cfg, Fake(error=FusekiUnavailable("[Errno 111] refused"))), "SELECT * WHERE { ?s ?p ?o }")
+    assert "Is Fuseki running" in down.get_json()["error"] and "Errno" not in down.get_json()["error"]
+
+
+def test_slow_or_oversized_queries_say_so(cfg):
+    r = api(client_for(cfg, Fake(error=FusekiError("The query took longer than 60 seconds."))), "SELECT * WHERE { ?s ?p ?o }")
+    assert r.status_code == 400 and "longer than 60 seconds" in r.get_json()["error"]

@@ -27,6 +27,9 @@ def test_escape_literal_neutralises_quotes_backslashes_and_newlines():
     ("SELECT * WHERE { ?s ?p ?add . ?s <https://x/load> ?o }", "select"),   # variable / IRI
     ("SELECT * WHERE { ?s fb:create ?o }  # DROP everything", "select"),   # prefixed name + comment
     ("SELECT * WHERE { ?s ?p 'it''s' } # don't DELETE", "select"),
+    ("PREFIX ex: <http://x/> SELECT * { ?s ex:auto-delete ?o }", "select"),   # hyphen inside a local name
+    ("PREFIX ex: <http://x/> SELECT * { ?s ex:v1.copy ?o }", "select"),       # dot inside a local name
+    ('SELECT * WHERE { ?s ?p "x"@add }', "select"),                           # language tag
 ])
 def test_query_form_accepts_read_queries(query, form):
     assert sparqlutil.query_form(query) == form
@@ -75,8 +78,13 @@ def test_parse_turtle_round_trip():
 # ---------- FusekiClient ----------
 
 class FakeResponse:
-    def __init__(self, body): self.body = body.encode()
-    def read(self): return self.body
+    def __init__(self, body):
+        self.body = body.encode() if isinstance(body, str) else body
+        self.pos = 0
+    def read(self, n=-1):
+        end = len(self.body) if n < 0 else self.pos + n
+        chunk, self.pos = self.body[self.pos:end], min(end, len(self.body))
+        return chunk
     def __enter__(self): return self
     def __exit__(self, *a): return False
 
@@ -127,3 +135,43 @@ def test_client_maps_http_and_network_errors(monkeypatch):
     c, _ = client_with(monkeypatch, down)
     with pytest.raises(fuseki.FusekiUnavailable):
         c.ask("ASK {}")
+
+
+# ---------- FusekiClient limits and error detail ----------
+
+def test_client_sends_a_fuseki_side_timeout(monkeypatch):
+    c, calls = client_with(monkeypatch, lambda req: FakeResponse("{}"))
+    c.select("SELECT 1")
+    assert "timeout=7000" in calls[0][1]
+
+
+def test_client_aborts_results_larger_than_the_byte_cap(monkeypatch):
+    c, _ = client_with(monkeypatch, lambda req: FakeResponse(b"x" * 5000))
+    c.max_bytes = 1000
+    with pytest.raises(fuseki.FusekiError, match="larger than"):
+        c.select("SELECT * { ?s ?p ?o }")
+
+
+def test_client_enforces_a_total_deadline(monkeypatch):
+    ticks = iter(range(0, 1000, 5))                        # every clock reading is 5 s later
+    monkeypatch.setattr(fuseki.time, "monotonic", lambda: next(ticks))
+    c, _ = client_with(monkeypatch, lambda req: FakeResponse(b"x" * 200000))
+    with pytest.raises(fuseki.FusekiError, match="longer than 7 seconds"):
+        c.select("SELECT * { ?s ?p ?o }")
+
+
+def test_client_reports_a_socket_timeout_as_a_slow_query(monkeypatch):
+    def slow(req):
+        raise TimeoutError("timed out")
+    c, _ = client_with(monkeypatch, slow)
+    with pytest.raises(fuseki.FusekiError, match="longer than 7 seconds"):
+        c.select("SELECT 1")
+
+
+def test_client_keeps_the_body_of_a_server_error(monkeypatch):
+    def boom(req):
+        raise urllib.error.HTTPError(req.full_url, 500, "x", {}, __import__("io").BytesIO(b"Query timed out in Fuseki"))
+    c, _ = client_with(monkeypatch, boom)
+    with pytest.raises(fuseki.FusekiFailure, match="timed out in Fuseki"):
+        c.select("x")
+    assert issubclass(fuseki.FusekiFailure, fuseki.FusekiUnavailable)

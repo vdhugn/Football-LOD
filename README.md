@@ -17,7 +17,12 @@ The CSVs go in `datasets/` (git-ignored).
 
 ## Web application
 
-`make web` starts the web app on <http://localhost:8000> (it needs Fuseki, see Quick start). `docker compose up -d` starts both services; the container reads `FUSEKI_URL` (default `http://localhost:3030/football`).
+The web app needs Fuseki running (`scripts/load.sh`, which starts only Fuseki). Run the web app **one** of two ways, both on <http://localhost:8000>:
+
+- `make web`: runs it locally from the virtualenv (reads `FUSEKI_URL`, default `http://localhost:3030/football`);
+- `docker compose up -d --build web`: runs it in a container (gunicorn; there `FUSEKI_URL` is `http://fuseki:3030/football`).
+
+Do not start both at once, they use the same port.
 
 | Route | What it does |
 |---|---|

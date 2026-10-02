@@ -8,13 +8,14 @@ from rdflib import OWL, RDF, RDFS, Graph
 from common import load_config
 
 from .entities import KIND_RE, Entities, short
-from .fuseki import FusekiClient, FusekiError, FusekiUnavailable
+from .fuseki import FusekiClient, FusekiError, FusekiFailure, FusekiUnavailable
 from .rdfio import EXTS, MIME_EXT, OFFERS, parse_turtle, serialize
 from .sparqlutil import query_form
 
 ROOT = Path(__file__).resolve().parents[2]
 MAX_ROWS = 1000
 MAX_QUERY_CHARS = 20000
+MAX_GRAPH_CHARS = 1000000
 UNAVAILABLE = "The SPARQL endpoint could not be reached. Is Fuseki running (scripts/load.sh)?"
 
 
@@ -71,10 +72,11 @@ def create_app(cfg=None, client=None, root=ROOT):
     # ---------- error handling ----------
 
     @app.errorhandler(FusekiUnavailable)
-    def unavailable(_):
+    def unavailable(e):
+        message = f"The SPARQL endpoint reported an error: {e}" if isinstance(e, FusekiFailure) else UNAVAILABLE
         if request.path.startswith("/api/"):
-            return jsonify(error=UNAVAILABLE), 502
-        return render_template("error.html", title="Endpoint unavailable", message=UNAVAILABLE), 502
+            return jsonify(error=message), 502
+        return render_template("error.html", title="Endpoint unavailable", message=message), 502
 
     @app.errorhandler(FusekiError)
     def rejected(e):
@@ -180,6 +182,7 @@ def create_app(cfg=None, client=None, root=ROOT):
             return jsonify(form="select", vars=names, rows=rows, truncated=len(bindings) > MAX_ROWS)
         if form == "ask":
             return jsonify(form="ask", boolean=client.ask(text))
-        return jsonify(form="graph", turtle=client.construct(text))
+        turtle = client.construct(text)
+        return jsonify(form="graph", turtle=turtle[:MAX_GRAPH_CHARS], truncated=len(turtle) > MAX_GRAPH_CHARS)
 
     return app

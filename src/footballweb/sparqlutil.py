@@ -9,7 +9,7 @@ _NOISE = re.compile(
     r'"""(?s:.*?)"""|\'\'\'(?s:.*?)\'\'\'|"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\''
     r"|<[^<>\"{}|^`\\\s]*>|#[^\n]*"
 )
-_WORD = re.compile(r"(?<![?$:\w])[A-Za-z_]+(?![\w:])")
+_WORD = re.compile(r"(?<![?$:@.\w-])[A-Za-z_]+(?![\w:.-])")
 UPDATE_WORDS = {"INSERT", "DELETE", "LOAD", "CLEAR", "DROP", "CREATE", "COPY", "MOVE", "ADD", "WITH"}
 FORMS = ("SELECT", "ASK", "CONSTRUCT", "DESCRIBE")
 
