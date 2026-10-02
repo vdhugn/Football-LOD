@@ -4,6 +4,7 @@ CLI: python src/link_wikidata.py   (needs .cache/scope.json and output/data/*.tt
 Wikidata responses are cached under <cache_dir>/wikidata/, so reruns work offline.
 """
 import json
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -81,11 +82,29 @@ def fetch_rows(prop, ids, cache_dir, key, fetch=sparql, with_venue=False, batch=
     return out
 
 
+_IRI_UNSAFE = re.compile(r'[\x00-\x20<>"{}|^`\\%#?]')
+
+
 def dbpedia_uri(article_url):
+    """DBpedia resource IRIs use the decoded title (Kylian_Mbappé), not the percent-encoded URL path."""
     prefix = "https://en.wikipedia.org/wiki/"
     if not article_url or not article_url.startswith(prefix):
         return None
-    return "http://dbpedia.org/resource/" + article_url[len(prefix):]
+    title = urllib.parse.unquote(article_url[len(prefix):])
+    return "http://dbpedia.org/resource/" + _IRI_UNSAFE.sub(lambda m: "%%%02X" % ord(m.group()), title)
+
+
+def one_to_one(rows):
+    """Keep only rows whose Transfermarkt ID <-> Wikidata item pair is unambiguous in both directions.
+
+    Returns (kept_rows, number_of_ambiguous_transfermarkt_ids)."""
+    items_of, ids_of = {}, {}
+    for r in rows:
+        items_of.setdefault(r["tm"], set()).add(r["item"])
+        ids_of.setdefault(r["item"], set()).add(r["tm"])
+    ok = {tm for tm, items in items_of.items()
+          if len(items) == 1 and len(ids_of[next(iter(items))]) == 1}
+    return [r for r in rows if r["tm"] in ok], len(items_of) - len(ok)
 
 
 def write_links(out_dir, uris, kinds):
@@ -133,9 +152,9 @@ def country_rows(names, cache_dir, fetch=sparql, pause=1.0):
         chunk = names[i:i + 100]
         values = " ".join('"' + n.replace("\\", "\\\\").replace('"', '\\"') + '"@en' for n in chunk)
         q = ("SELECT ?name ?item ?geonames WHERE { VALUES ?name { " + values + " } "
-             "?item rdfs:label ?name ; wdt:P31 ?type . VALUES ?type { wd:Q6256 wd:Q3624078 } "
+             "?item rdfs:label ?name ; wdt:P31 ?type . VALUES ?type { wd:Q6256 wd:Q3624078 wd:Q3336843 } "
              "OPTIONAL { ?item wdt:P1566 ?geonames } }")
-        result = cached_query(Path(cache_dir) / "wikidata", f"countries-{hash_id(*chunk)}", q, fetch, pause)
+        result = cached_query(Path(cache_dir) / "wikidata", f"countries-{hash_id(q)}", q, fetch, pause)   # key covers the query text, not just the names
         for row in _rows(result):
             entry = {"name": row["name"], "item": row["item"],
                      **({"geonames": row["geonames"]} if "geonames" in row else {})}
@@ -146,12 +165,14 @@ def country_rows(names, cache_dir, fetch=sparql, pause=1.0):
 
 def write_country_links(out_dir, rows, name_to_uri):
     n = 0
+    done = set()
     with TurtleWriter(Path(out_dir) / "wikidata-countries.ttl", "") as wd, \
             TurtleWriter(Path(out_dir) / "geonames.ttl", "") as gn:
         for r in rows:
             ours = name_to_uri.get(r["name"])
-            if ours is None:
+            if ours is None or (ours, r["item"]) in done:
                 continue
+            done.add((ours, r["item"]))
             wd.node(ours, ("owl:sameAs", f"<{r['item']}>"))
             gn.node(ours, ("owl:sameAs", f"<https://sws.geonames.org/{r['geonames']}/>" if r.get("geonames") else None))
             n += 1
@@ -159,8 +180,11 @@ def write_country_links(out_dir, rows, name_to_uri):
 
 
 def write_report(out_dir, stats):
-    rep = {k: {"total": t, "linked": l, "rate": round(l / t, 4) if t else 0.0}
-           for k, (t, l) in stats.items()}
+    rep = {}
+    for k, (t, l, *extra) in stats.items():
+        rep[k] = {"total": t, "linked": l, "rate": round(l / t, 4) if t else 0.0}
+        if extra:
+            rep[k]["ambiguous"] = extra[0]
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     (Path(out_dir) / "report.json").write_text(json.dumps(rep, indent=2), encoding="utf-8")
     return rep
@@ -177,10 +201,10 @@ def main():
     nat_ids = {clean(r["national_team_id"]) for r in read_csv(data_dir / "national_teams.csv")} | scope.national_ids
     comp_ids = {c["id"] for c in cfg["competitions"]}
 
-    players = fetch_rows(PROP_PLAYER, scope.player_ids, cache, "player")
-    clubs = fetch_rows(PROP_TEAM, scope.club_ids, cache, "club", with_venue=True)
-    nationals = fetch_rows(PROP_TEAM, nat_ids, cache, "national", with_venue=False)
-    comps = fetch_rows(PROP_COMPETITION, comp_ids, cache, "competition")
+    players, amb_players = one_to_one(fetch_rows(PROP_PLAYER, scope.player_ids, cache, "player"))
+    clubs, amb_clubs = one_to_one(fetch_rows(PROP_TEAM, scope.club_ids, cache, "club", with_venue=True))
+    nationals, amb_nationals = one_to_one(fetch_rows(PROP_TEAM, nat_ids, cache, "national"))
+    comps, amb_comps = one_to_one(fetch_rows(PROP_COMPETITION, comp_ids, cache, "competition"))
 
     counts = write_links(out, uris, {"player": players, "club": clubs,
                                      "national-team": nationals, "competition": comps})
@@ -195,16 +219,16 @@ def main():
         if r["player_id"] in scope.player_ids:
             resolver.uri(r["country_of_citizenship"])
             resolver.uri(r["country_of_birth"])
-    names = resolver.all_names()
+    names = resolver.lookup_names()
     crows = country_rows(list(names), cache)
     country_links = write_country_links(out, crows, names)
 
     report = write_report(out, {
-        "player": (len(scope.player_ids), counts["player"]),
-        "club": (len(scope.club_ids), counts["club"]),
-        "national-team": (len(nat_ids), counts["national-team"]),
-        "competition": (len(comp_ids), counts["competition"]),
-        "country": (len(names), country_links),
+        "player": (len(scope.player_ids), counts["player"], amb_players),
+        "club": (len(scope.club_ids), counts["club"], amb_clubs),
+        "national-team": (len(nat_ids), counts["national-team"], amb_nationals),
+        "competition": (len(comp_ids), counts["competition"], amb_comps),
+        "country": (len(resolver.all_names()), country_links),
         "stadium": (len(set(club_stadium.values())), stadium_links),
     })
     print(json.dumps(report, indent=2))

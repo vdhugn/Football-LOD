@@ -26,9 +26,10 @@ GB1, ES1, IT1, L1, FR1, CL and EL for seasons 2012–2025; FIWC (all six World C
 - In scope: 30,132 games, 25,482 players, 10,671 clubs (791 of them described in `clubs.csv`, the rest are minimal nodes from transfer history), 135 national teams.
 - Links (`output/links/report.json`):
   players 23,287 of 25,482 (91.4%), national teams 135 of 135, competitions 8 of 8,
-  clubs listed in `clubs.csv` 766 of 791 (96.8%; 26.4% of all clubs because of the minimal nodes),
-  countries 162 of 208 names (77.9%), stadiums 264 of 760 (`skos:closeMatch`).
-- Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 54 unit tests pass.
+  clubs listed in `clubs.csv` 753 of 791 (95.2%; 26.2% of all clubs because of the minimal nodes),
+  countries 167 of 208 names (80.3%), stadiums 261 of 760 (`skos:closeMatch`).
+  Only unambiguous one-to-one Transfermarkt-ID / Wikidata-item pairs become links; 24 clubs with ambiguous IDs are skipped (see `ambiguous` in `report.json`).
+- Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 60 unit tests pass.
 - Build is deterministic (two runs are byte-identical); relinking runs offline from `.cache/wikidata/` in under a second.
 
 ## Layout
