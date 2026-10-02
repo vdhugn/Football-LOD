@@ -37,3 +37,6 @@ tbody th { width: 28%; font-weight: 600; }
 #result { margin-top: 16px; overflow-x: auto; }
 #result pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; }
 @media (max-width: 600px) { .searchbar { margin-left: 0; width: 100%; } .searchbar input { flex: 1; } }
+.editor-title { margin: 16px 0 4px; font-size: 18px; }
+.hint { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }

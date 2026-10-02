@@ -89,6 +89,16 @@
     if (last && last.form === 'select') download('results.json', 'application/json', JSON.stringify(last.rows, null, 2));
   });
   document.getElementById('run').addEventListener('click', run);
+  document.getElementById('clear').addEventListener('click', function () {
+    editor.setValue('');
+    select.value = '';
+    history.replaceState(null, '', location.pathname);
+    resultEl.textContent = '';
+    last = null;
+    csvBtn.disabled = jsonBtn.disabled = true;
+    setStatus('');
+    editor.focus();
+  });
 
   fetch('/api/examples').then(function (r) { return r.json(); }).then(function (examples) {
     examples.forEach(function (ex) {
@@ -101,5 +111,6 @@
     }
     select.addEventListener('change', function () { history.replaceState(null, '', '#' + select.value); choose(select.value); });
     if (location.hash.length > 1) choose(location.hash.slice(1));
+    else editor.focus();
   });
 })();

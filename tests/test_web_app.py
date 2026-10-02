@@ -265,3 +265,9 @@ def test_server_errors_keep_fuseki_message_but_connection_errors_stay_generic(cf
 def test_slow_or_oversized_queries_say_so(cfg):
     r = api(client_for(cfg, Fake(error=FusekiError("The query took longer than 60 seconds."))), "SELECT * WHERE { ?s ?p ?o }")
     assert r.status_code == 400 and "longer than 60 seconds" in r.get_json()["error"]
+
+
+def test_playground_tells_the_user_to_type_their_own_query(cfg):
+    html = client_for(cfg, Fake()).get("/query").get_data(as_text=True)
+    assert "Type or paste your own SPARQL" in html           # the Example box only loads samples
+    assert 'id="clear"' in html and 'id="q"' in html
