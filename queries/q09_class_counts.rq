@@ -1,6 +1,6 @@
 PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-# Instances per ontology class, plus the number of owl:sameAs links
+# Number of instances per ontology class
 SELECT ?class (COUNT(?s) AS ?instances) WHERE { ?s a ?class . FILTER(STRSTARTS(STR(?class), STR(fb:))) }
 GROUP BY ?class ORDER BY DESC(?instances)

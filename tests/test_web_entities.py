@@ -156,3 +156,12 @@ def test_page_other_kinds_have_no_related_and_unknown_is_none(cfg):
 def test_title_falls_back_to_uri(cfg):
     fake = Fake({"GROUP BY ?p ?o": result(["p", "o", "ol"], [row(FB + "goals", lit("1"))])})
     assert Entities(fake, cfg).page("appearance", "a1")["title"] == f"{R}appearance/a1"
+
+
+def test_year_values_are_not_given_thousands_separators(cfg):
+    xsd = "http://www.w3.org/2001/XMLSchema#integer"
+    rows = [row(FB + "lastSeason", lit("2025", datatype=xsd)), row(FB + "startYear", lit("2023", datatype=xsd)),
+            row(FB + "stadiumSeats", lit("60704", datatype=xsd))]
+    fake = Fake({"GROUP BY ?p ?o": result(["p", "o", "ol"], rows)})
+    groups = {g["name"]: g["entries"][0]["text"] for g in Entities(fake, cfg).page("club", "11")["groups"]}
+    assert groups == {"lastSeason": "2025", "startYear": "2023", "stadiumSeats": "60,704"}

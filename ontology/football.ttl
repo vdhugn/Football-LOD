@@ -22,7 +22,7 @@ fb:Country a owl:Class ; rdfs:subClassOf schema:Country ; rdfs:label "Country"@e
 fb:Stadium a owl:Class ; rdfs:subClassOf schema:StadiumOrArena ; rdfs:label "Stadium"@en ; rdfs:comment "A football stadium."@en .
 fb:Referee a owl:Class ; rdfs:label "Referee"@en ; rdfs:comment "A match referee."@en .
 fb:Manager a owl:Class ; rdfs:label "Manager"@en ; rdfs:comment "A coach or manager of a team."@en .
-fb:Position a owl:Class ; rdfs:label "Position"@en ; rdfs:comment "A playing position, modelled as a SKOS concept; sub-positions are skos:broader than their position."@en .
+fb:Position a owl:Class ; rdfs:label "Position"@en ; rdfs:comment "A playing position, modelled as a SKOS concept; each sub-position points to its position with skos:broader."@en .
 fb:Season a owl:Class ; rdfs:label "Season"@en ; rdfs:comment "A season, identified by its start year in the source data."@en .
 fb:MatchEvent a owl:Class ; rdfs:label "Match event"@en ; rdfs:comment "Something that happened during a match."@en .
 fb:Goal a owl:Class ; rdfs:subClassOf fb:MatchEvent ; rdfs:label "Goal"@en ; rdfs:comment "A goal event."@en .

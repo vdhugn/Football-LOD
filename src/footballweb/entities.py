@@ -17,6 +17,7 @@ EXTERNAL = {
     FOAF_DEPICTION,
 }
 NUMERIC = ("integer", "decimal", "double", "float")
+PLAIN_NUMBERS = {"lastSeason", "startYear"}      # years, shown without thousands separators
 
 
 def short(uri):
@@ -80,13 +81,13 @@ class Entities:
 
     # ---------- entity page ----------
 
-    def _item(self, o, olabel):
+    def _item(self, o, olabel, pred=None):
         if o["type"] == "uri":
             href = self.local(o["value"])
             return {"kind": "uri", "text": olabel or short(o["value"]), "href": href or o["value"],
                     "internal": href is not None, "meta": None}
         dt = short(o["datatype"]) if o.get("datatype") else None
-        text = fmt_number(o["value"]) if dt in NUMERIC else o["value"]
+        text = fmt_number(o["value"]) if dt in NUMERIC and short(pred or "") not in PLAIN_NUMBERS else o["value"]
         return {"kind": "literal", "text": text, "href": None, "internal": False,
                 "meta": dt or o.get("xml:lang")}
 
@@ -113,7 +114,7 @@ class Entities:
             else:
                 if p == RDFS_LABEL and title is None:
                     title = o["value"]
-                groups.setdefault(p, []).append(self._item(o, _val(b, "ol")))
+                groups.setdefault(p, []).append(self._item(o, _val(b, "ol"), p))
         return {
             "title": title or uri, "uri": uri, "types": types, "depiction": depiction,
             "external": external,
