@@ -32,6 +32,97 @@ GB1, ES1, IT1, L1, FR1, CL and EL for seasons 2012–2025; FIWC (all six World C
 - Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 60 unit tests pass.
 - Build is deterministic (two runs are byte-identical); relinking runs offline from `.cache/wikidata/` in under a second.
 
+## Ontology
+
+Simplified view of `ontology/football.ttl` (main classes, relations and a few attributes; the file has the full list with labels, domains and ranges).
+Appearances, events, transfers and valuations are separate nodes because they relate more than two things (player, match, team, club).
+
+```mermaid
+classDiagram
+    direction LR
+
+    Team <|-- Club
+    Team <|-- NationalTeam
+    MatchEvent <|-- Goal
+    MatchEvent <|-- Card
+    MatchEvent <|-- Substitution
+    MatchEvent <|-- PenaltyShootoutKick
+
+    class Player {
+        +date dateOfBirth
+        +int heightCm
+        +string preferredFoot
+        +decimal currentMarketValueEUR
+    }
+    class Match {
+        +date matchDate
+        +int homeScore
+        +int awayScore
+        +int attendance
+    }
+    class Appearance {
+        +int goals
+        +int assists
+        +int minutesPlayed
+    }
+    class MatchEvent {
+        +int minute
+    }
+    class Card {
+        +string cardType
+    }
+    class PenaltyShootoutKick {
+        +boolean scored
+    }
+    class Transfer {
+        +date transferDate
+        +decimal transferFee
+    }
+    class MarketValuation {
+        +date valuationDate
+        +decimal valueEUR
+    }
+    class Stadium {
+        +int stadiumSeats
+    }
+
+    Player --> Club : playsFor
+    Player --> NationalTeam : representsNationalTeam
+    Player --> Country : citizenOf
+    Player --> Country : bornIn
+    Player --> Position : position
+    Player --> Position : subPosition
+
+    Match --> Team : homeTeam
+    Match --> Team : awayTeam
+    Match --> Competition : inCompetition
+    Match --> Season : inSeason
+    Match --> Stadium : hostedAt
+    Match --> Referee : refereedBy
+
+    Club --> Stadium : homeStadium
+    Club --> Competition : domesticCompetition
+    Team --> Manager : managedBy
+    Competition --> Country : country
+
+    Appearance --> Player : appearanceOf
+    Appearance --> Match : inMatch
+    Appearance --> Team : forTeam
+
+    MatchEvent --> Match : inMatch
+    MatchEvent --> Player : byPlayer
+    MatchEvent --> Team : forTeam
+    Goal --> Player : assistedBy
+    Substitution --> Player : playerIn
+    Substitution --> Player : playerOut
+
+    Transfer --> Player : transferOf
+    Transfer --> Club : fromClub
+    Transfer --> Club : toClub
+    MarketValuation --> Player : valuationOf
+    MarketValuation --> Club : atClub
+```
+
 ## Layout
 
 | Path | Purpose |
