@@ -122,9 +122,9 @@ def test_page_player(cfg):
                              {"pred": "depiction", "uri": "https://img.example/10.jpg"}]   # spec 3.2: also listed
     names = [g["name"] for g in p["groups"]]
     assert names == sorted(names) and "playsFor" in names and "sameAs" not in names and "type" not in names
-    plays = next(g for g in p["groups"] if g["name"] == "playsFor")["values"][0]
+    plays = next(g for g in p["groups"] if g["name"] == "playsFor")["entries"][0]
     assert plays == {"kind": "uri", "text": "Arsenal FC", "href": "/page/club/11", "internal": True, "meta": None}
-    value = next(g for g in p["groups"] if g["name"] == "currentMarketValueEUR")["values"][0]
+    value = next(g for g in p["groups"] if g["name"] == "currentMarketValueEUR")["entries"][0]
     assert value["text"] == "120,000,000" and value["meta"] == "decimal"
     rel = p["related"]
     assert rel["transfers"] == [{"date": "2023-01-01", "from": {"text": "Arsenal FC", "href": "/page/club/11"},

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% macro val(v) -%}
+  {%- if v.kind == 'uri' -%}
+    <a href="{{ v.href }}"{% if not v.internal %} rel="noopener"{% endif %}>{{ v.text }}</a>
+  {%- else -%}
+    {{ v.text }}{% if v.meta %} <span class="meta">{{ v.meta }}</span>{% endif %}
+  {%- endif -%}
+{%- endmacro %}
+{% block title %}{{ e.title }} · Football LOD{% endblock %}
+{% block content %}
+<article>
+  <header class="entity-head">
+    {% if e.depiction %}<img class="depiction" src="{{ e.depiction }}" alt="" loading="lazy">{% endif %}
+    <div>
+      <h1>{{ e.title }}</h1>
+      <p>{% for t in e.types %}<span class="badge">{{ t }}</span> {% endfor %}</p>
+      <p class="uri"><code>{{ e.uri }}</code></p>
+      <p class="formats">Data:
+        {% for x in exts %}<a href="{{ url_for('data', kind=kind, name=key ~ '.' ~ x) }}">{{ x }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+      </p>
+    </div>
+  </header>
+
+  {% if e.external %}
+  <section>
+    <h2>Linked data</h2>
+    <ul class="links">
+      {% for l in e.external %}<li><span class="meta">{{ l.pred }}</span> <a href="{{ l.uri }}" rel="noopener">{{ l.uri }}</a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% set rel = e.related %}
+  {% if rel.totals %}
+  <section>
+    <h2>Career in the dataset</h2>
+    <p>{{ rel.totals.appearances }} appearances, {{ rel.totals.goals }} goals.</p>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>Properties</h2>
+    <table>
+      <tbody>
+      {% for g in e.groups %}
+        <tr><th scope="row">{{ g.name }}</th><td>{% for v in g.entries %}{{ val(v) }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if rel.transfers %}
+  <section>
+    <h2>Transfers</h2>
+    <table>
+      <thead><tr><th>Date</th><th>From</th><th>To</th><th class="num">Fee (EUR)</th></tr></thead>
+      <tbody>
+      {% for t in rel.transfers %}
+        <tr><td>{{ t.date }}</td><td><a href="{{ t.from.href }}">{{ t.from.text }}</a></td><td><a href="{{ t.to.href }}">{{ t.to.text }}</a></td><td class="num">{{ t.fee or '' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if rel.valuations %}
+  <section>
+    <h2>Market value history</h2>
+    <table>
+      <thead><tr><th>Date</th><th class="num">Value (EUR)</th></tr></thead>
+      <tbody>{% for v in rel.valuations %}<tr><td>{{ v.date }}</td><td class="num">{{ v.value }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if rel.squad %}
+  <section>
+    <h2>Current squad</h2>
+    <table>
+      <thead><tr><th>Player</th><th class="num">Market value (EUR)</th></tr></thead>
+      <tbody>{% for p in rel.squad %}<tr><td><a href="{{ p.href }}">{{ p.text }}</a></td><td class="num">{{ p.value or '' }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

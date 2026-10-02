@@ -1,3 +1,5 @@
 rdflib>=7.0
 pyshacl>=0.26
 pytest>=7.4
+flask>=3.0
+gunicorn>=22.0

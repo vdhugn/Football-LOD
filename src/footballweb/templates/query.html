@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}SPARQL · Football LOD{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+{% endblock %}
+{% block content %}
+<h1>SPARQL playground</h1>
+<div class="toolbar">
+  <label>Example <select id="examples"><option value="">Choose…</option></select></label>
+  <button id="run" type="button">Run (Ctrl+Enter)</button>
+  <button id="csv" type="button" disabled>Download CSV</button>
+  <button id="json" type="button" disabled>Download JSON</button>
+  <span id="status" role="status"></span>
+</div>
+<textarea id="q" aria-label="SPARQL query">PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;
+SELECT ?s ?label WHERE { ?s rdfs:label ?label } LIMIT 10</textarea>
+<div id="result" data-resource-base="{{ resource_base }}"></div>
+{% endblock %}
+{% block scripts %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sparql/sparql.min.js"></script>
+  <script src="{{ url_for('static', filename='query.js') }}"></script>
+{% endblock %}

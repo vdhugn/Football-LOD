@@ -117,7 +117,7 @@ class Entities:
         return {
             "title": title or uri, "uri": uri, "types": types, "depiction": depiction,
             "external": external,
-            "groups": [{"name": short(p), "values": v} for p, v in sorted(groups.items(), key=lambda kv: short(kv[0]))],
+            "groups": [{"name": short(p), "entries": v} for p, v in sorted(groups.items(), key=lambda kv: short(kv[0]))],
             "related": self._related(kind, iri),
         }
 

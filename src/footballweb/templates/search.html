@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Search {{ q }} · Football LOD{% endblock %}
+{% block content %}
+<h1>Search</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if q and not error %}
+  {% if results %}
+  <ul class="results">
+    {% for r in results %}
+    <li><a href="{{ r.href }}">{{ r.label }}</a> <span class="badge">{{ r.type }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p>No results for “{{ q }}”.</p>{% endif %}
+{% elif not q %}
+  <p>Type at least two characters in the search box.</p>
+{% endif %}
+{% endblock %}

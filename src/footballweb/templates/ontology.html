@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Ontology · Football LOD{% endblock %}
+{% block content %}
+<h1>Football ontology</h1>
+<p><code>{{ base }}</code></p>
+<p class="formats">Download:
+  {% for x in exts %}<a href="{{ url_for('ontology_view', ext=x) }}">{{ x }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+</p>
+<h2>Classes</h2>
+<table>
+  <thead><tr><th>Class</th><th>Subclass of</th><th>Description</th></tr></thead>
+  <tbody>{% for c in o.classes %}<tr id="{{ c.name }}"><th scope="row">{{ c.name }}</th><td>{{ c.parents | join(', ') }}</td><td>{{ c.comment }}</td></tr>{% endfor %}</tbody>
+</table>
+<h2>Properties</h2>
+<table>
+  <thead><tr><th>Property</th><th>Kind</th><th>Domain</th><th>Range</th><th>Description</th></tr></thead>
+  <tbody>{% for p in o.properties %}<tr id="{{ p.name }}"><th scope="row">{{ p.name }}</th><td>{{ p.kind }}</td><td>{{ p.domain }}</td><td>{{ p.range }}</td><td>{{ p.comment }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}
