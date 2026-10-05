@@ -4,7 +4,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 {% endblock %}
 {% block content %}
-<h1>SPARQL playground</h1>
+<h1>Ask or query</h1>
+<form id="ask-form" class="ask" role="search">
+  <input type="search" id="ask" maxlength="200" autocomplete="off" aria-label="Ask a question"
+         placeholder="Ask in plain English: top scorers Premier League 2023">
+  <button type="submit">Ask</button>
+</form>
+<p class="hint">Try <a href="#" class="try">top scorers Premier League 2023</a>, <a href="#" class="try">most expensive transfers</a>,
+  <a href="#" class="try">Arsenal squad</a>, <a href="#" class="try">Messi market value</a> or <a href="#" class="try">Arsenal vs Chelsea</a>.</p>
+<div id="answer" hidden>
+  <p id="meaning" class="meaning"></p>
+  <ul id="notes" class="meta"></ul>
+  <details><summary>Generated SPARQL</summary><pre id="generated"></pre></details>
+  <button id="open-editor" type="button" class="secondary">Open in editor</button>
+</div>
+<h2 class="editor-title">SPARQL playground</h2>
 <div class="toolbar">
   <label>Example <select id="examples"><option value="">Choose…</option></select></label>
   <button id="run" type="button">Run (Ctrl+Enter)</button>
@@ -13,7 +27,6 @@
   <button id="json" type="button" disabled>Download JSON</button>
   <span id="status" role="status"></span>
 </div>
-<h2 class="editor-title">Your query</h2>
 <p class="hint">Type or paste your own SPARQL in the editor below. The Example list only loads a ready-made query into it, which you can then edit.</p>
 <textarea id="q" aria-label="SPARQL query">PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;
 SELECT ?s ?label WHERE { ?s rdfs:label ?label } LIMIT 10</textarea>

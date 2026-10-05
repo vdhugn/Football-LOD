@@ -3,6 +3,11 @@
 <section class="hero">
   <h1>Football Linked Open Data</h1>
   <p>Browse players, clubs, competitions and matches, follow links to Wikidata and DBpedia, or query the data with SPARQL.</p>
+  <form class="ask" action="{{ url_for('query_page') }}" method="get" role="search">
+    <input type="search" name="ask" maxlength="200" autocomplete="off" aria-label="Ask a question"
+           placeholder="Ask in plain English: top scorers Premier League 2023">
+    <button type="submit">Ask</button>
+  </form>
 </section>
 <section>
   <h2>Example queries</h2>

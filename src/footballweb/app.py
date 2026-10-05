@@ -7,6 +7,7 @@ from rdflib import OWL, RDF, RDFS, Graph
 
 from common import load_config
 
+from .ask import Asker, AskError
 from .entities import KIND_RE, Entities, short
 from .fuseki import FusekiClient, FusekiError, FusekiFailure, FusekiUnavailable
 from .rdfio import EXTS, MIME_EXT, OFFERS, parse_turtle, serialize
@@ -49,6 +50,7 @@ def create_app(cfg=None, client=None, root=ROOT):
     client = client or FusekiClient(os.environ.get("FUSEKI_URL", "http://localhost:3030/football"))
     app = Flask(__name__)
     ent = Entities(client, cfg)
+    asker = Asker(client, cfg)
 
     ontology = Graph()
     ontology.parse(str(root / "ontology" / "football.ttl"), format="turtle")
@@ -83,6 +85,10 @@ def create_app(cfg=None, client=None, root=ROOT):
         if request.path.startswith("/api/"):
             return jsonify(error=str(e)), 400
         return render_template("error.html", title="Query rejected", message=str(e)), 400
+
+    @app.errorhandler(AskError)
+    def not_understood(e):
+        return jsonify(error=str(e), suggestions=e.suggestions), 400
 
     @app.errorhandler(404)
     def not_found(_):
@@ -161,6 +167,14 @@ def create_app(cfg=None, client=None, root=ROOT):
     @app.get("/api/examples")
     def api_examples():
         return jsonify(examples())
+
+    @app.post("/api/ask")
+    def api_ask():
+        payload = request.get_json(silent=True)
+        text = payload.get("question") if isinstance(payload, dict) else None
+        if not isinstance(text, str):
+            return jsonify(error="Send a question as JSON: {\"question\": \"...\"}.", suggestions=[]), 400
+        return jsonify(asker.answer(text))
 
     @app.post("/api/query")
     def api_query():

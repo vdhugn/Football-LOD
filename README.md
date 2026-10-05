@@ -26,12 +26,29 @@ Do not start both at once, they use the same port.
 
 | Route | What it does |
 |---|---|
-| `/` | search box and the nine example queries |
+| `/` | search box, question box and the nine example queries |
 | `/search?q=messi` | players, clubs, national teams, competitions and countries by name |
 | `/page/<kind>/<id>` | entity page: properties, links to Wikidata/DBpedia/GeoNames, transfers, market values, squad |
 | `/resource/<kind>/<id>` | Linked Data URI: `303` to the HTML page for browsers, to Turtle, JSON-LD, RDF/XML or N-Triples for clients that ask for them |
 | `/ontology` | the ontology as HTML or RDF |
-| `/query` | SPARQL playground (CodeMirror editor, example queries, CSV/JSON download) |
+| `/query` | question box (plain English, e.g. “top scorers Premier League 2023”) and SPARQL playground (CodeMirror editor, example queries, CSV/JSON download) |
+
+### Asking in plain English
+
+The box on `/` and `/query` turns a question into SPARQL with rules and templates (no external service, no model). It shows the generated query and an **Open in editor** button, so the answer can be checked and refined.
+Supported questions, each with optional competition (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, Europa League, World Cup), season (`2023`, `2022/23`) and `top N`:
+
+| Ask | Example |
+|---|---|
+| top scorers / assists, optionally for a team | `top scorers Premier League 2023`, `top assists La Liga 2022`, `top scorers Real Madrid 2023` |
+| a player's totals | `Haaland goals Premier League 2023` |
+| transfers: most expensive, of a player, to/from a club | `most expensive transfers`, `Messi transfers`, `transfers to Arsenal` |
+| squad or most valuable players | `Arsenal squad`, `players of Brazil`, `most valuable players` |
+| market value history | `Messi market value` |
+| biggest wins, matches, head to head | `biggest wins Champions League`, `results of Arsenal 2023`, `Arsenal vs Chelsea` |
+| find a resource by name | `mbappe` (accents are ignored) |
+
+Names are linked by searching the English labels in the endpoint (`Bayern Munich`, not `Bayern München`). A question it cannot parse gets the three nearest example questions. `POST /api/ask` with `{"question": "..."}` returns the same result as JSON.
 
 ```bash
 curl -L -H "Accept: text/turtle" http://localhost:8000/resource/player/28003
@@ -55,7 +72,7 @@ GB1, ES1, IT1, L1, FR1, CL and EL for seasons 2012–2025; FIWC (all six World C
   clubs listed in `clubs.csv` 753 of 791 (95.2%; 26.2% of all clubs because of the minimal nodes),
   countries 167 of 208 names (80.3%), stadiums 261 of 760 (`skos:closeMatch`).
   Only unambiguous one-to-one Transfermarkt-ID / Wikidata-item pairs become links; 24 clubs with ambiguous IDs are skipped (see `ambiguous` in `report.json`).
-- Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 118 unit tests pass.
+- Validation: ontology vocabulary check OK; SHACL on the full data `sh:conforms true`; all five dangling-reference checks return 0; 175 unit tests pass.
 - Build is deterministic (two runs are byte-identical); relinking runs offline from `.cache/wikidata/` in under a second.
 
 ## Ontology
@@ -155,7 +172,7 @@ classDiagram
 |---|---|
 | `ontology/football.ttl` | ontology (English only) |
 | `src/` | scope selection, builders, Wikidata linking, vocabulary check |
-| `src/footballweb/` | Flask web app (entity pages, content negotiation, ontology page, SPARQL playground) |
+| `src/footballweb/` | Flask web app (entity pages, content negotiation, ontology page, SPARQL playground, plain-language questions in `ask.py`) |
 | `shapes/football-shapes.ttl` | SHACL shapes |
 | `queries/` | nine competency queries; `queries/checks/` has dangling-reference checks |
 | `scripts/` | `load.sh` (load + start Fuseki), `query.sh`, `run_checks.sh`, `shacl.sh` |

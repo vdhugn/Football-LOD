@@ -57,6 +57,80 @@
     }
   }
 
+  var askInput = document.getElementById('ask');
+  var answerEl = document.getElementById('answer');
+  var generated = '';
+
+  function askCell(c) {
+    var td = document.createElement('td');
+    if (c === null) return td;
+    if (c.href) { var a = document.createElement('a'); a.href = c.href; a.textContent = c.text; td.appendChild(a); }
+    else td.textContent = c.text;
+    return td;
+  }
+
+  function showAnswer(data) {
+    generated = data.sparql;
+    answerEl.hidden = false;
+    document.getElementById('meaning').textContent = data.interpretation;
+    var notes = document.getElementById('notes');
+    notes.textContent = '';
+    data.notes.forEach(function (n) { var li = document.createElement('li'); li.textContent = n; notes.appendChild(li); });
+    document.getElementById('generated').textContent = data.sparql;
+    resultEl.textContent = '';
+    var table = document.createElement('table');
+    var head = table.createTHead().insertRow();
+    data.vars.forEach(function (v) { var th = document.createElement('th'); th.textContent = v; head.appendChild(th); });
+    var body = table.createTBody();
+    data.rows.forEach(function (row) {
+      var tr = body.insertRow();
+      row.forEach(function (c) { tr.appendChild(askCell(c)); });
+    });
+    resultEl.appendChild(table);
+    last = { form: 'select', vars: data.vars, rows: data.rows.map(function (row) {
+      var o = {}; data.vars.forEach(function (v, i) { o[v] = row[i] ? row[i].text : null; }); return o; }) };
+    csvBtn.disabled = jsonBtn.disabled = false;
+    setStatus(data.rows.length ? data.rows.length + ' rows' : 'No rows. The data may not cover this question.');
+  }
+
+  function showMisunderstood(body) {
+    answerEl.hidden = true;
+    last = null; csvBtn.disabled = jsonBtn.disabled = true;
+    resultEl.textContent = '';
+    setStatus(body.error || 'Error');
+    if (body.suggestions && body.suggestions.length) {
+      var p = document.createElement('p');
+      p.className = 'suggest';
+      p.appendChild(document.createTextNode('Did you mean: '));
+      body.suggestions.forEach(function (s) {
+        var a = document.createElement('a'); a.href = '#'; a.textContent = s;
+        a.addEventListener('click', function (e) { e.preventDefault(); askInput.value = s; ask(s); });
+        p.appendChild(a);
+      });
+      resultEl.appendChild(p);
+    }
+  }
+
+  function ask(q) {
+    if (!q.trim()) return;
+    setStatus('Thinking…');
+    fetch('/api/ask', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) { if (res.ok) showAnswer(res.body); else showMisunderstood(res.body); })
+      .catch(function () { setStatus('Request failed'); });
+  }
+
+  document.getElementById('ask-form').addEventListener('submit', function (e) { e.preventDefault(); ask(askInput.value); });
+  Array.prototype.forEach.call(document.querySelectorAll('a.try'), function (a) {
+    a.addEventListener('click', function (e) { e.preventDefault(); askInput.value = a.textContent; ask(a.textContent); });
+  });
+  document.getElementById('open-editor').addEventListener('click', function () {
+    editor.setValue(generated); select.value = ''; editor.focus();
+    document.querySelector('.CodeMirror').scrollIntoView({ block: 'center' });
+  });
+
   function run() {
     setStatus('Running…');
     fetch('/api/query', {
@@ -94,6 +168,7 @@
     select.value = '';
     history.replaceState(null, '', location.pathname);
     resultEl.textContent = '';
+    answerEl.hidden = true;
     last = null;
     csvBtn.disabled = jsonBtn.disabled = true;
     setStatus('');
@@ -110,7 +185,9 @@
       if (ex) { editor.setValue(ex.query); select.value = id; run(); }
     }
     select.addEventListener('change', function () { history.replaceState(null, '', '#' + select.value); choose(select.value); });
+    var asked = new URLSearchParams(location.search).get('ask');
     if (location.hash.length > 1) choose(location.hash.slice(1));
-    else editor.focus();
+    else if (asked) { askInput.value = asked; ask(asked); }
+    else askInput.focus();
   });
 })();
