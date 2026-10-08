@@ -14,8 +14,7 @@ def main(argv=None):
     scope = select_scope(cfg, cfg["data_dir"])
     out = Path(cfg["cache_dir"]) / "scope.json"
     scope.save(out)
-    print(f"games={len(scope.game_ids)} clubs={len(scope.club_ids)} "
-          f"national_teams={len(scope.national_ids)} players={len(scope.player_ids)} -> {out}")
+    print(f"clubs={len(scope.club_ids)} players={len(scope.player_ids)} -> {out}")
 
 
 if __name__ == "__main__":

@@ -15,12 +15,10 @@ def build(ctx):
                    ("fb:confederation", lit(r["confederation"])),
                    ("rdfs:seeAlso", iri(r["url"])))
 
-        known = set()
         for r in ctx.csv("national_teams.csv"):
             nid = clean(r["national_team_id"])
             if not nid:
                 continue
-            known.add(nid)
             manager = named_node(ctx, w, "manager", "fb:Manager", r["coach_name"])
             w.node(u.res("national-team", nid),
                    ("a", "fb:NationalTeam"),
@@ -37,12 +35,6 @@ def build(ctx):
                    ("fb:lastSeason", t_int(r["last_season"])),
                    ("foaf:depiction", iri(r["team_image_url"])),
                    ("rdfs:seeAlso", iri(r["url"])))
-
-        for nid in sorted(ctx.scope.national_ids - known):
-            ctx.notes["national_team_minimal"] += 1
-            w.node(u.res("national-team", nid),
-                   ("a", "fb:NationalTeam"),
-                   ("rdfs:label", lit(ctx.scope.national_names.get(nid), "und")))
 
         for r in ctx.csv("competitions.csv"):
             cid = clean(r["competition_id"])

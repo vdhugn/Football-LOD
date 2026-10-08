@@ -5,8 +5,7 @@ from helpers import load_ttl
 from validate import check_vocabulary
 
 ONT = Path(__file__).resolve().parents[1] / "ontology" / "football.ttl"
-EXPECTED = {"reference.ttl", "clubs.ttl", "players.ttl", "matches.ttl",
-            "appearances.ttl", "events.ttl", "transfers.ttl", "valuations.ttl"}
+EXPECTED = {"reference.ttl", "clubs.ttl", "players.ttl", "transfers.ttl", "valuations.ttl"}
 
 
 def test_run_writes_all_files_that_parse(cfg, data_dir, tmp_path):

@@ -46,7 +46,7 @@ class Fake:
 
 @pytest.fixture
 def cfg():
-    return {"ontology_base": FB, "resource_base": R, "competitions": []}
+    return {"ontology_base": FB, "resource_base": R}
 
 
 def client_for(cfg, fake):
@@ -131,9 +131,7 @@ def test_entity_page_renders_data_and_links(cfg):
                      "date": {"type": "literal", "value": "2023-01-01"},
                      "from": {"type": "uri", "value": f"{R}club/11"}, "fl": {"type": "literal", "value": "Arsenal FC"},
                      "to": {"type": "uri", "value": f"{R}club/148"}, "tl": {"type": "literal", "value": "Spurs"},
-                     "fee": {"type": "literal", "value": "5000000.0"}}]),
-                 "COUNT(?a)": result(["apps", "goals"], [{"apps": {"type": "literal", "value": "12"},
-                                                          "goals": {"type": "literal", "value": "3"}}])})
+                     "fee": {"type": "literal", "value": "5000000.0"}}])})
     html = client_for(cfg, fake).get("/page/player/10").get_data(as_text=True)
     assert "Bukayo Saka" in html and f"{R}player/10" in html
     assert 'href="/page/club/11"' in html and "Arsenal FC" in html

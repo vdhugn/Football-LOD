@@ -1,5 +1,5 @@
 PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
 SELECT (COUNT(*) AS ?n) WHERE {
-  ?a a fb:Appearance ; fb:appearanceOf ?p .
-  FILTER NOT EXISTS { ?p a fb:Player }
+  ?v a fb:MarketValuation ; fb:atClub ?c .
+  FILTER NOT EXISTS { ?c a fb:Club }
 }

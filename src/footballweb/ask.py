@@ -14,32 +14,23 @@ from .sparqlutil import escape_literal
 MAX_QUESTION_CHARS = 200
 MAX_LIMIT = 100
 MAX_ROWS = 1000
-DEFAULT_LIMIT = {"scorers": 10, "assists": 10, "transfers": 10, "wins": 10, "players": 20,
-                 "value": 50, "matches": 20, "lookup": 20}
+DEFAULT_LIMIT = {"transfers": 10, "players": 20, "value": 50, "lookup": 20}
 
 COMPETITIONS = [
     ("english premier league", "GB1"), ("premier league", "GB1"), ("epl", "GB1"),
     ("la liga", "ES1"), ("laliga", "ES1"), ("serie a", "IT1"), ("bundesliga", "L1"), ("ligue 1", "FR1"),
-    ("uefa champions league", "CL"), ("champions league", "CL"), ("ucl", "CL"),
-    ("uefa europa league", "EL"), ("europa league", "EL"), ("uel", "EL"),
-    ("fifa world cup", "FIWC"), ("world cup", "FIWC"),
 ]
 COMPETITIONS.sort(key=lambda a: -len(a[0]))
 COMP_NAMES = {"GB1": "Premier League", "ES1": "La Liga", "IT1": "Serie A", "L1": "Bundesliga",
-              "FR1": "Ligue 1", "CL": "Champions League", "EL": "Europa League", "FIWC": "World Cup"}
+              "FR1": "Ligue 1"}
 
 # first match wins; strong "players" patterns come before "value" so that
 # "most valuable players by market value" is a list of players, not one player's history
 INTENTS = [
-    ("wins", r"\b(?:biggest|largest|heaviest|highest|record)\b.*\b(?:wins?|victor\w+|margins?|scorelines?)\b|\bthrash\w*|\bhammered\b"),
-    ("assists", r"\bassists?\b"),
-    ("scorers", r"\bscorers?\b|\bgoalscorers?\b|\bgolden boot\b|\bmost goals\b|\btop goals\b"),
     ("transfers", r"\btransfers?\b|\bsigned\b|\bsold\b|\bbought\b|\bsignings?\b"),
     ("players", r"\bmost valuable\b|\bhighest valued\b|\bmost expensive players\b|\bsquad\b|\broster\b"),
     ("value", r"\bvaluations?\b|\bworth\b|\bmarket value\b|\bvalue history\b|\bhow much\b"),
     ("players", r"\bplayers?\b"),
-    ("stats", r"\bstats?\b|\bstatistics\b|\bcareer\b|\bappearances?\b|\bgoals\b"),
-    ("matches", r"\bmatches\b|\bresults?\b|\bgames?\b|\bfixtures?\b|\bscores?\b"),
 ]
 STOP = set("""the a an of in at for by to from and or show me list give get find what which who whom is are was were
 did do does how many much all top best most biggest largest highest record win wins victory victories margin margins
@@ -51,10 +42,9 @@ now latest recent last first new ever overall total tell about i want see betwee
 AFFIXES = {"fc", "cf", "afc", "sc", "ac", "ssc"}
 
 EXAMPLES = [
-    "Top scorers Premier League 2023", "Most expensive transfers", "Arsenal squad",
-    "Messi market value", "Biggest wins Champions League", "Arsenal vs Chelsea",
-    "Haaland goals Premier League 2023", "Players of Brazil", "Transfers to Arsenal",
-    "Top assists La Liga 2022", "Most valuable players",
+    "Most valuable players Premier League", "Most expensive transfers", "Arsenal squad",
+    "Haaland market value", "Players of Brazil", "Transfers to Arsenal",
+    "Mbappe valuation history", "Transfers from Real Madrid 2023", "Most valuable players",
 ]
 
 _ACCENTS = {"a": "àáâãäåāăą", "e": "èéêëēėę", "i": "ìíîïī", "o": "òóôõöøō", "u": "ùúûüū", "c": "çćč",
@@ -173,12 +163,12 @@ class Asker:
     def ask(self, text):
         text = (text or "").strip()
         if not text:
-            raise AskError("Type a question, for example “top scorers Premier League 2023”.", EXAMPLES[:3])
+            raise AskError("Type a question, for example “most valuable players Premier League”.", EXAMPLES[:3])
         if len(text) > MAX_QUESTION_CHARS:
             raise AskError(f"The question is longer than {MAX_QUESTION_CHARS} characters.", EXAMPLES[:3])
         p = parse_question(text)
         notes, entities = [], []
-        strict = p.intent in ("lookup", "value", "stats", "matches", None) or p.versus
+        strict = p.intent in ("lookup", "value", None) or p.versus
         for seg in p.segments:
             if not seg:
                 continue
@@ -194,17 +184,13 @@ class Asker:
                                self._suggest(text))
             else:
                 notes.append(f"Ignored “{seg}”: no matching player or team.")
-        intent = p.intent or ("matches" if p.versus and len(entities) >= 2 else "lookup" if entities else None)
+        intent = p.intent or ("lookup" if entities else None)
         if intent is None:
             raise AskError("I did not understand that question.", self._suggest(text))
         players = [e for e in entities if e["type"] == "Player"]
         teams = [e for e in entities if e["type"] != "Player"]
-        if intent in ("scorers", "assists") and players:
-            intent = "stats"
         build = getattr(self, f"_q_{intent}")
         sparql, meaning = build(p, players, teams, entities)
-        if p.season and intent not in ("value", "transfers", "lookup"):
-            notes.append(f"Season {p.season} is the one starting in {p.season} (Transfermarkt convention).")
         return {"question": text, "intent": intent, "interpretation": meaning, "sparql": sparql,
                 "notes": notes, "entities": [{"label": e["label"], "type": e["type"], "href": e["href"]} for e in entities]}
 
@@ -253,20 +239,6 @@ class Asker:
     def _iri(self, uri):
         return f"<{uri}>"
 
-    def _scope(self, p):
-        bits = [COMP_NAMES[p.comp]] if p.comp else []
-        if p.season:
-            bits.append(f"season {p.season}")
-        return bits
-
-    def _match_filters(self, p, var="?m"):
-        lines = []
-        if p.comp:
-            lines.append(f"{var} fb:inCompetition {self.ent.iri('competition', p.comp)} .")
-        if p.season:
-            lines.append(f"{var} fb:inSeason {self.ent.iri('season', p.season)} .")
-        return lines
-
     def _year(self, p, var="?date"):
         return [f"FILTER(YEAR({var}) = {p.season})"] if p.season else []
 
@@ -275,40 +247,8 @@ class Asker:
 
     def _need_player(self, players, what):
         if not players:
-            raise AskError(f"{what} needs a player name, for example “Messi market value”.", EXAMPLES[3:4] + EXAMPLES[6:7])
+            raise AskError(f"{what} needs a player name, for example “Haaland market value”.", EXAMPLES[3:4] + EXAMPLES[6:7])
         return players[0]
-
-    def _q_scorers(self, p, players, teams, entities, measure="goals"):
-        body = [f"?a fb:appearanceOf ?player ; fb:inMatch ?m ; fb:{'goals' if measure == 'goals' else 'assists'} ?n ."]
-        if teams:
-            body.append(f"?a fb:forTeam {self._iri(teams[0]['uri'])} .")
-        body += self._match_filters(p)
-        body.append("?player rdfs:label ?playerLabel .")
-        n = self._limit(p, "scorers")
-        sparql = self._select(f"?player ?playerLabel (SUM(?n) AS ?{measure})", body,
-                              f"GROUP BY ?player ?playerLabel ORDER BY DESC(?{measure}) LIMIT {n}")
-        kind = "goalscorers" if measure == "goals" else "assist providers"
-        bits = ([f"for {teams[0]['label']}"] if teams else []) + self._scope(p)
-        return sparql, f"Top {n} {kind}" + (" · " + " · ".join(bits) if bits else "")
-
-    def _q_assists(self, p, players, teams, entities):
-        return self._q_scorers(p, players, teams, entities, measure="assists")
-
-    def _q_stats(self, p, players, teams, entities):
-        player = self._need_player(players, "Player statistics")
-        iri = self._iri(player["uri"])
-        body = [f"{iri} rdfs:label ?playerLabel .", f"?a fb:appearanceOf {iri} .",
-                "OPTIONAL { ?a fb:goals ?g } OPTIONAL { ?a fb:assists ?ast } OPTIONAL { ?a fb:minutesPlayed ?min }"]
-        if teams:
-            body.append(f"?a fb:forTeam {self._iri(teams[0]['uri'])} .")
-        match = self._match_filters(p)
-        if match:
-            body = body[:2] + ["?a fb:inMatch ?m ."] + match + body[2:]
-        sparql = self._select("?playerLabel (COUNT(?a) AS ?appearances) (SUM(COALESCE(?g, 0)) AS ?goals) "
-                              "(SUM(COALESCE(?ast, 0)) AS ?assists) (SUM(COALESCE(?min, 0)) AS ?minutes)",
-                              body, "GROUP BY ?playerLabel")
-        bits = ([f"for {teams[0]['label']}"] if teams else []) + self._scope(p)
-        return sparql, f"Appearances, goals and assists of {player['label']}" + (" · " + " · ".join(bits) if bits else "")
 
     def _q_transfers(self, p, players, teams, entities):
         body = ["?t fb:transferOf ?player ; fb:transferDate ?date ; fb:fromClub ?from ; fb:toClub ?to ."]
@@ -341,6 +281,9 @@ class Asker:
             prop = "fb:representsNationalTeam" if teams[0]["type"] == "NationalTeam" else "fb:playsFor"
             body.append(f"?player {prop} {self._iri(teams[0]['uri'])} .")
             what += f" of {teams[0]['label']} (current squad)"
+        if p.comp:
+            body.append(f"?player fb:playsFor ?club . ?club fb:domesticCompetition {self.ent.iri('competition', p.comp)} .")
+            what += f" · {COMP_NAMES[p.comp]}"
         body.append("OPTIONAL { ?player fb:currentMarketValueEUR ?value }")
         n = self._limit(p, "players")
         return self._select("?player ?playerLabel ?value", body, f"ORDER BY DESC(?value) LIMIT {n}"), what
@@ -353,45 +296,6 @@ class Asker:
         n = self._limit(p, "value")
         what = f"Market value history of {player['label']}" + (f" in {p.season}" if p.season else "")
         return self._select("?date ?value ?club ?clubLabel", body, f"ORDER BY DESC(?date) LIMIT {n}"), what
-
-    def _q_matches(self, p, players, teams, entities, wins=False):
-        if not teams:
-            raise AskError("Matches need a club or national team, for example “Arsenal vs Chelsea”.", EXAMPLES[5:6])
-        body = ["?m fb:homeTeam ?home ; fb:awayTeam ?away ; fb:homeScore ?homeScore ; "
-                "fb:awayScore ?awayScore ; fb:matchDate ?date ."]
-        body += self._match_filters(p)
-        a = self._iri(teams[0]["uri"])
-        if len(teams) > 1:
-            b = self._iri(teams[1]["uri"])
-            body.append(f"FILTER((?home = {a} && ?away = {b}) || (?home = {b} && ?away = {a}))")
-            who = f"{teams[0]['label']} vs {teams[1]['label']}"
-        else:
-            body.append(f"?m fb:homeTeam|fb:awayTeam {a} .")
-            who = teams[0]["label"]
-        body.append("?home rdfs:label ?homeLabel . ?away rdfs:label ?awayLabel .")
-        n = self._limit(p, "wins" if wins else "matches")
-        bits = [who] + self._scope(p)
-        if wins:
-            body.append("BIND(ABS(?homeScore - ?awayScore) AS ?diff)")
-            return (self._select("?date ?home ?homeLabel ?homeScore ?awayScore ?away ?awayLabel ?diff", body,
-                                 f"ORDER BY DESC(?diff) ?date LIMIT {n}"),
-                    f"Top {n} biggest wins · " + " · ".join(bits))
-        return (self._select("?date ?home ?homeLabel ?homeScore ?awayScore ?away ?awayLabel", body,
-                             f"ORDER BY DESC(?date) LIMIT {n}"),
-                f"Latest {n} matches · " + " · ".join(bits))
-
-    def _q_wins(self, p, players, teams, entities):
-        if teams:
-            return self._q_matches(p, players, teams, entities, wins=True)
-        body = ["?m fb:homeTeam ?home ; fb:awayTeam ?away ; fb:homeScore ?homeScore ; "
-                "fb:awayScore ?awayScore ; fb:matchDate ?date ."]
-        body += self._match_filters(p)
-        body += ["?home rdfs:label ?homeLabel . ?away rdfs:label ?awayLabel .",
-                 "BIND(ABS(?homeScore - ?awayScore) AS ?diff)"]
-        n = self._limit(p, "wins")
-        sparql = self._select("?date ?home ?homeLabel ?homeScore ?awayScore ?away ?awayLabel ?diff", body,
-                              f"ORDER BY DESC(?diff) ?date LIMIT {n}")
-        return sparql, f"Top {n} biggest wins" + "".join(" · " + b for b in self._scope(p))
 
     def _q_lookup(self, p, players, teams, entities):
         phrase = " ".join(p.segments).strip()

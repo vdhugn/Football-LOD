@@ -1,8 +1,8 @@
 PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-# Market value history of Lionel Messi
+# Market value history of Erling Haaland
 SELECT ?date ?value WHERE {
-  ?p a fb:Player ; rdfs:label ?n . FILTER(STR(?n) = "Lionel Messi")
+  ?p a fb:Player ; rdfs:label ?n . FILTER(STR(?n) = "Erling Haaland")
   ?v fb:valuationOf ?p ; fb:valuationDate ?date ; fb:valueEUR ?value .
 } ORDER BY ?date

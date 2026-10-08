@@ -112,7 +112,6 @@ def test_page_player(cfg):
             "date": lit("2023-01-01"), "from": uri(f"{R}club/11"), "fl": lit("Arsenal FC"),
             "to": uri(f"{R}club/148"), "tl": lit("Tottenham Hotspur"), "fee": lit("5000000.0")}]),
         "fb:valuationOf": result(["date", "value"], [{"date": lit("2023-06-01"), "value": lit("100000000.0")}]),
-        "COUNT(?a)": result(["apps", "goals"], [{"apps": lit("12"), "goals": lit("3")}]),
     })
     p = Entities(fake, cfg).page("player", "10")
     assert p["title"] == "Bukayo Saka" and p["types"] == ["Player"]
@@ -130,7 +129,6 @@ def test_page_player(cfg):
     assert rel["transfers"] == [{"date": "2023-01-01", "from": {"text": "Arsenal FC", "href": "/page/club/11"},
                                  "to": {"text": "Tottenham Hotspur", "href": "/page/club/148"}, "fee": "5,000,000"}]
     assert rel["valuations"] == [{"date": "2023-06-01", "value": "100,000,000"}]
-    assert rel["totals"] == {"appearances": "12", "goals": "3"}
 
 
 def test_page_club_squad(cfg):
@@ -154,14 +152,13 @@ def test_page_other_kinds_have_no_related_and_unknown_is_none(cfg):
 
 
 def test_title_falls_back_to_uri(cfg):
-    fake = Fake({"GROUP BY ?p ?o": result(["p", "o", "ol"], [row(FB + "goals", lit("1"))])})
-    assert Entities(fake, cfg).page("appearance", "a1")["title"] == f"{R}appearance/a1"
+    fake = Fake({"GROUP BY ?p ?o": result(["p", "o", "ol"], [row(FB + "transferSeason", lit("23/24"))])})
+    assert Entities(fake, cfg).page("transfer", "t1")["title"] == f"{R}transfer/t1"
 
 
 def test_year_values_are_not_given_thousands_separators(cfg):
     xsd = "http://www.w3.org/2001/XMLSchema#integer"
-    rows = [row(FB + "lastSeason", lit("2025", datatype=xsd)), row(FB + "startYear", lit("2023", datatype=xsd)),
-            row(FB + "stadiumSeats", lit("60704", datatype=xsd))]
+    rows = [row(FB + "lastSeason", lit("2025", datatype=xsd)), row(FB + "stadiumSeats", lit("60704", datatype=xsd))]
     fake = Fake({"GROUP BY ?p ?o": result(["p", "o", "ol"], rows)})
     groups = {g["name"]: g["entries"][0]["text"] for g in Entities(fake, cfg).page("club", "11")["groups"]}
-    assert groups == {"lastSeason": "2025", "startYear": "2023", "stadiumSeats": "60,704"}
+    assert groups == {"lastSeason": "2025", "stadiumSeats": "60,704"}

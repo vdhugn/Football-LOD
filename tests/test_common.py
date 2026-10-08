@@ -1,7 +1,7 @@
 from rdflib import Literal, URIRef
 from rdflib.namespace import XSD
 
-from common import (BuildCtx, TurtleWriter, Uris, clean, expand_seasons, hash_id, iri,
+from common import (BuildCtx, TurtleWriter, Uris, clean, hash_id, iri,
                     lit, parse_date, parse_decimal, parse_int, parse_net_transfer,
                     slug, t_int)
 from helpers import FB, R, load_ttl
@@ -45,19 +45,11 @@ def test_slug_and_hash_and_iri():
     assert iri("has space") is None and iri("") is None
 
 
-def test_expand_seasons():
-    assert expand_seasons({"from": 2012, "to": 2014}) == [2012, 2013, 2014]
-    assert expand_seasons([2005, "2009"]) == [2005, 2009]
-
-
 def test_uris(cfg):
     u = Uris(cfg)
     assert u.res("player", "10") == f"<{R}player/10>"
     assert u.res("player", "") is None and u.res("player", None) is None
     assert u.res("stadium", "Allianz Arena") == f"<{R}stadium/Allianz%20Arena>"
-    assert u.team("club", "5") == f"<{R}club/5>"
-    assert u.team("national", "5") == f"<{R}national-team/5>"
-    assert u.team("club", "") is None
 
 
 def test_writer_round_trips_awkward_literals(tmp_path):

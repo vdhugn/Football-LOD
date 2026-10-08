@@ -1,0 +1,9 @@
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Ten largest home stadiums of clubs in the top five leagues
+SELECT ?stadium ?seats ?club WHERE {
+  VALUES ?league { <https://vdhugn.github.io/Football-LOD/resource/competition/GB1> <https://vdhugn.github.io/Football-LOD/resource/competition/ES1> <https://vdhugn.github.io/Football-LOD/resource/competition/IT1> <https://vdhugn.github.io/Football-LOD/resource/competition/L1> <https://vdhugn.github.io/Football-LOD/resource/competition/FR1> }
+  ?c fb:domesticCompetition ?league ; fb:homeStadium ?s ; rdfs:label ?club .
+  ?s rdfs:label ?stadium ; fb:stadiumSeats ?seats .
+} ORDER BY DESC(?seats) LIMIT 10

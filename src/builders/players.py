@@ -19,7 +19,6 @@ def build(ctx):
     u = ctx.uris
     ctx.countries = countries = CountryResolver(ctx)
     national_ids = {clean(r["national_team_id"]) for r in ctx.csv("national_teams.csv")}
-    national_ids |= ctx.scope.national_ids
     seen_players = set()
     with ctx.writer("players.ttl") as w:
         for r in ctx.csv("players.csv"):

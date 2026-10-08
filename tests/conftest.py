@@ -14,10 +14,7 @@ def cfg():
     return {
         "ontology_base": "https://vdhugn.github.io/Football-LOD/ontology#",
         "resource_base": "https://vdhugn.github.io/Football-LOD/resource/",
-        "competitions": [
-            {"id": "GB1", "kind": "club", "seasons": [2023]},
-            {"id": "FIWC", "kind": "national", "seasons": [2025]},
-        ],
+        "scope": {"leagues": ["GB1"], "season": 2025},
     }
 
 

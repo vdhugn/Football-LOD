@@ -17,7 +17,7 @@ EXTERNAL = {
     FOAF_DEPICTION,
 }
 NUMERIC = ("integer", "decimal", "double", "float")
-PLAIN_NUMBERS = {"lastSeason", "startYear"}      # years, shown without thousands separators
+PLAIN_NUMBERS = {"lastSeason"}      # years, shown without thousands separators
 
 
 def short(uri):
@@ -126,8 +126,7 @@ class Entities:
 
     def _related(self, kind, iri):
         if kind == "player":
-            return {"transfers": self._transfers(iri), "valuations": self._valuations(iri),
-                    "totals": self._totals(iri)}
+            return {"transfers": self._transfers(iri), "valuations": self._valuations(iri)}
         if kind == "club":
             return {"squad": self._squad(iri)}
         return {}
@@ -155,14 +154,6 @@ class Entities:
              "ORDER BY DESC(?date) LIMIT 100")
         return [{"date": _val(b, "date"), "value": fmt_number(_val(b, "value"))}
                 for b in self.client.select(q)["results"]["bindings"]]
-
-    def _totals(self, iri):
-        q = (self.prefixes +
-             f"SELECT (COUNT(?a) AS ?apps) (SUM(?g) AS ?goals) WHERE {{ ?a fb:appearanceOf {iri} . "
-             "OPTIONAL { ?a fb:goals ?g } }")
-        rows = self.client.select(q)["results"]["bindings"]
-        b = rows[0] if rows else {}
-        return {"appearances": _val(b, "apps") or "0", "goals": _val(b, "goals") or "0"}
 
     def _squad(self, iri):
         q = (self.prefixes +

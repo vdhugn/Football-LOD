@@ -32,23 +32,24 @@ def test_fixture_data_conforms(cfg, data_dir, tmp_path):
     assert conforms, text
 
 
-def test_match_without_away_team_violates(cfg, data_dir, tmp_path):
+def test_transfer_without_destination_club_violates(cfg, data_dir, tmp_path):
+    from common import hash_id
     from scope import select_scope
     out = tmp_path / "out"
     run(cfg, select_scope(cfg, data_dir), data_dir, out)
     ont = Graph().parse(str(ROOT / "ontology" / "football.ttl"), format="turtle")
     g = load_all(out)
-    g.remove((URIRef(f"{R}match/100"), URIRef(FB + "awayTeam"), None))
+    g.remove((URIRef(f"{R}transfer/{hash_id('10', '2023-01-01', '11', '148')}"), URIRef(FB + "toClub"), None))
     conforms, text = shacl(g, ont)
-    assert not conforms and "awayTeam" in text
+    assert not conforms and "toClub" in text
 
 
-def test_appearance_pointing_to_unknown_player_violates(cfg, data_dir, tmp_path):
+def test_valuation_pointing_to_unknown_player_violates(cfg, data_dir, tmp_path):
     from scope import select_scope
     out = tmp_path / "out"
     run(cfg, select_scope(cfg, data_dir), data_dir, out)
     ont = Graph().parse(str(ROOT / "ontology" / "football.ttl"), format="turtle")
     g = load_all(out)
-    g.set((URIRef(f"{R}appearance/100_10"), URIRef(FB + "appearanceOf"), URIRef(f"{R}player/does-not-exist")))
+    g.set((URIRef(f"{R}valuation/10-2023-06-01"), URIRef(FB + "valuationOf"), URIRef(f"{R}player/does-not-exist")))
     conforms, _ = shacl(g, ont)
     assert not conforms

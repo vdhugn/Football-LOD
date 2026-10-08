@@ -1,25 +1,25 @@
 from scope import Scope, select_scope
 
 
-def test_games_filtered_by_competition_and_season(ctx):
+def test_clubs_filtered_by_league_and_season(ctx):
     s = ctx.scope
-    assert s.game_ids == {"100", "200"}          # 101 is season 2022, excluded
-    assert s.game_kind == {"100": "club", "200": "national"}
+    assert "11" in s.club_ids
+    assert "50" not in s.club_ids                 # GB1 but last_season 2020
+    assert "60" not in s.club_ids                 # season 2025 but TR1
 
 
-def test_clubs_and_national_teams(ctx):
+def test_clubs_from_transfers_and_valuations(ctx):
     s = ctx.scope
-    assert {"11", "148"} <= s.club_ids
-    assert "999" in s.club_ids                    # from an in-scope player's transfer
+    assert s.club_ids == {"11", "148", "999", "888"}   # in-scope players' transfers / valuations
     assert "777" not in s.club_ids                # valuation of an out-of-scope player
-    assert s.national_ids == {"3299", "9999"}
+    assert "555" not in s.club_ids                # transfer of an out-of-scope player
+    assert s.club_names["11"] == "Arsenal FC"
     assert s.club_names["148"] == "Tottenham Hotspur"
     assert s.club_names["999"] == "Hale End"      # "Unknown" valuation name never wins
-    assert s.national_names["9999"] == "Serbia and Montenegro"
 
 
 def test_players(ctx):
-    assert ctx.scope.player_ids == {"10", "20"}   # 30: only in excluded game / other club
+    assert ctx.scope.player_ids == {"10", "20"}   # 30: club outside the leagues; 40: last_season 2021
 
 
 def test_save_and_load_round_trip(ctx, tmp_path):

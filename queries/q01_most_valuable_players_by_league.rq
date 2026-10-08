@@ -1,0 +1,8 @@
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# 10 most valuable players currently in the Premier League
+SELECT ?player ?club ?value WHERE {
+  ?c fb:domesticCompetition <https://vdhugn.github.io/Football-LOD/resource/competition/GB1> ; rdfs:label ?club .
+  ?p fb:playsFor ?c ; rdfs:label ?player ; fb:currentMarketValueEUR ?value .
+} ORDER BY DESC(?value) LIMIT 10

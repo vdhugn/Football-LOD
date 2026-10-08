@@ -24,6 +24,16 @@ def test_full_and_minimal_clubs(ctx):
     assert n == len(g)
 
 
+def test_league_missing_from_competitions_csv_gets_minimal_node(ctx):
+    clubs.build(ctx)
+    g = load_ttl(ctx.out_dir / "clubs.ttl")
+    col1 = URIRef(f"{R}competition/COL1")
+    assert (URIRef(f"{R}club/888"), URIRef(FB + "domesticCompetition"), col1) in g
+    assert (col1, RDF.type, URIRef(FB + "Competition")) in g
+    assert not list(g.triples((URIRef(f"{R}competition/GB1"), None, None)))   # known: described in reference.ttl
+    assert ctx.notes["competition_minimal"] == 1
+
+
 def test_player_values_and_nulls(ctx):
     players.build(ctx)
     g = load_ttl(ctx.out_dir / "players.ttl")

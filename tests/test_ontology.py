@@ -5,9 +5,10 @@ from rdflib import Graph, Namespace, RDF, RDFS, OWL
 FB = Namespace("https://vdhugn.github.io/Football-LOD/ontology#")
 ONT = Path(__file__).resolve().parents[1] / "ontology" / "football.ttl"
 
-CLASSES = ["Team", "Club", "NationalTeam", "Player", "Match", "Competition", "Country", "Stadium",
-           "Referee", "Manager", "Position", "Season", "MatchEvent", "Goal", "Card", "Substitution",
-           "PenaltyShootoutKick", "Appearance", "Transfer", "MarketValuation"]
+CLASSES = ["Team", "Club", "NationalTeam", "Player", "Competition", "Country", "Stadium",
+           "Manager", "Position", "Transfer", "MarketValuation"]
+REMOVED = ["Match", "Season", "Referee", "MatchEvent", "Goal", "Card", "Substitution",
+           "PenaltyShootoutKick", "Appearance", "appearanceOf", "inMatch", "homeTeam", "goals", "minute"]
 
 
 def graph():
@@ -28,14 +29,19 @@ def test_hierarchy():
     g = graph()
     assert (FB.Club, RDFS.subClassOf, FB.Team) in g
     assert (FB.NationalTeam, RDFS.subClassOf, FB.Team) in g
-    assert (FB.Goal, RDFS.subClassOf, FB.MatchEvent) in g
-    assert (FB.PenaltyShootoutKick, RDFS.subClassOf, FB.MatchEvent) in g
+
+
+def test_match_vocabulary_is_gone():
+    g = graph()
+    for t in REMOVED:
+        assert not list(g.triples((FB[t], None, None))), t
+        assert not list(g.triples((None, None, FB[t]))), t
 
 
 def test_every_property_has_label_comment_and_type():
     g = graph()
     props = set(g.subjects(RDF.type, OWL.ObjectProperty)) | set(g.subjects(RDF.type, OWL.DatatypeProperty))
-    assert len(props) >= 60
+    assert len(props) >= 45
     for p in props:
         assert (p, RDFS.label, None) in g, p
         assert (p, RDFS.comment, None) in g, p

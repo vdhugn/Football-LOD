@@ -24,13 +24,6 @@ def test_countries_and_national_teams(ctx):
     assert n == len(g)
 
 
-def test_missing_national_team_gets_minimal_node(ctx):
-    _, g = build(ctx)
-    minimal = URIRef(f"{R}national-team/9999")
-    assert (minimal, RDF.type, URIRef(FB + "NationalTeam")) in g
-    assert (minimal, RDFS.label, Literal("Serbia and Montenegro", lang="und")) in g
-
-
 def test_competitions_international_has_no_country(ctx):
     _, g = build(ctx)
     gb1, wc = URIRef(f"{R}competition/GB1"), URIRef(f"{R}competition/FIWC")

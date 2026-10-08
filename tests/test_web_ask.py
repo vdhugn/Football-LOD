@@ -8,7 +8,7 @@ from footballweb.entities import Entities
 from footballweb.sparqlutil import query_form
 from helpers import FB, R
 
-CFG = {"ontology_base": FB, "resource_base": R, "competitions": []}
+CFG = {"ontology_base": FB, "resource_base": R}
 
 
 def cand(kind, key, label):
@@ -54,23 +54,22 @@ def test_fold_strips_accents_and_case():
     assert fold("Kylian Mbappé  ÜBER") == "kylian mbappe uber"
 
 
-def test_parse_scorers_with_competition_and_season():
-    p = parse_question("Top scorers Premier League 2023")
-    assert (p.intent, p.comp, p.season, p.limit) == ("scorers", "GB1", 2023, None)
+def test_parse_players_with_competition_and_season():
+    p = parse_question("Most valuable players Premier League 2023")
+    assert (p.intent, p.comp, p.season, p.limit) == ("players", "GB1", 2023, None)
     assert p.segments == [""]
 
 
 @pytest.mark.parametrize("text,comp", [
-    ("la liga top scorers", "ES1"), ("serie a top scorers", "IT1"), ("bundesliga scorers", "L1"),
-    ("ligue 1 scorers", "FR1"), ("champions league scorers", "CL"), ("UEL scorers", "EL"),
-    ("world cup scorers", "FIWC"),
+    ("la liga most valuable players", "ES1"), ("serie a players", "IT1"), ("bundesliga players", "L1"),
+    ("ligue 1 players", "FR1"), ("EPL players", "GB1"),
 ])
 def test_parse_competition_aliases(text, comp):
     assert parse_question(text).comp == comp
 
 
 def test_parse_season_range_and_limit():
-    p = parse_question("top 20 scorers 2022/23")
+    p = parse_question("top 20 players 2022/23")
     assert (p.season, p.limit) == (2022, 20)
 
 
@@ -78,13 +77,12 @@ def test_parse_season_range_and_limit():
     ("most expensive transfers", "transfers"),
     ("arsenal squad", "players"),
     ("most valuable players", "players"),
-    ("messi market value", "value"),
-    ("messi stats", "stats"),
-    ("how many goals did haaland score", "stats"),
-    ("biggest wins champions league", "wins"),
-    ("results of arsenal 2023", "matches"),
-    ("top assists la liga", "assists"),
-    ("messi", None),
+    ("haaland market value", "value"),
+    ("mbappe valuation history", "value"),
+    ("transfers from real madrid", "transfers"),
+    ("top scorers premier league", None),
+    ("arsenal vs chelsea", None),
+    ("haaland", None),
 ])
 def test_parse_intents(text, intent):
     assert parse_question(text).intent == intent
@@ -113,19 +111,24 @@ def test_label_pattern_matches_accents_and_escapes():
 
 # ---------- answering ----------
 
-def test_scorers_query_is_built_from_template():
+def test_players_of_a_league_are_built_from_template():
     a, _ = asker()
-    r = a.ask("top scorers premier league 2023")
-    assert r["intent"] == "scorers"
-    assert f"<{R}competition/GB1>" in r["sparql"] and f"<{R}season/2023>" in r["sparql"]
-    assert "LIMIT 10" in r["sparql"]
-    assert "Premier League" in r["interpretation"] and "2023" in r["interpretation"]
+    r = a.ask("most valuable players premier league")
+    assert r["intent"] == "players"
+    assert f"fb:domesticCompetition <{R}competition/GB1>" in r["sparql"]
+    assert "LIMIT 20" in r["sparql"]
+    assert "Premier League" in r["interpretation"]
     assert query_form(r["sparql"]) == "select"
+
+
+def test_match_questions_are_not_understood():
+    with pytest.raises(AskError):
+        asker()[0].ask("top scorers premier league 2023")
 
 
 def test_limit_is_capped():
     a, _ = asker()
-    assert "LIMIT 100" in a.ask("top 500 scorers")["sparql"]
+    assert "LIMIT 100" in a.ask("top 500 players")["sparql"]
 
 
 def test_squad_links_a_club():
@@ -147,9 +150,9 @@ def test_national_team_squad_uses_representation():
 
 
 def test_value_history_needs_a_player():
-    a, _ = asker({"messi": [cand("player", "28003", "Lionel Messi")]})
-    r = a.ask("messi market value")
-    assert f"fb:valuationOf <{R}player/28003>" in r["sparql"]
+    a, _ = asker({"haaland": [cand("player", "418560", "Erling Haaland")]})
+    r = a.ask("haaland market value")
+    assert f"fb:valuationOf <{R}player/418560>" in r["sparql"]
     with pytest.raises(AskError):
         asker({"arsenal": [cand("club", "11", "Arsenal FC")]})[0].ask("arsenal market value")
 
@@ -174,34 +177,9 @@ def test_most_expensive_transfers_have_no_entity():
     assert "ORDER BY DESC(?fee)" in s and "fb:transferFee ?fee" in s
 
 
-def test_scorers_with_player_becomes_stats():
-    a, _ = asker({"haaland": [cand("player", "418560", "Erling Haaland")]})
-    r = a.ask("haaland goals premier league 2023")
-    assert r["intent"] == "stats" and f"fb:appearanceOf <{R}player/418560>" in r["sparql"]
-    assert f"<{R}competition/GB1>" in r["sparql"]
-
-
-def test_scorers_for_a_club():
-    a, _ = asker({"arsenal": [cand("club", "11", "Arsenal FC")]})
-    s = a.ask("top scorers arsenal 2023")["sparql"]
-    assert f"fb:forTeam <{R}club/11>" in s
-
-
-def test_versus_finds_both_teams():
-    a, _ = asker({"arsenal": [cand("club", "11", "Arsenal FC")], "chelsea": [cand("club", "631", "Chelsea FC")]})
-    r = a.ask("arsenal vs chelsea")
-    assert r["intent"] == "matches"
-    assert f"<{R}club/11>" in r["sparql"] and f"<{R}club/631>" in r["sparql"]
-
-
-def test_biggest_wins_with_competition():
-    s = asker()[0].ask("biggest wins champions league")["sparql"]
-    assert f"<{R}competition/CL>" in s and "ABS(?homeScore - ?awayScore)" in s
-
-
 def test_bare_name_is_a_lookup():
-    a, _ = asker({"messi": [cand("player", "28003", "Lionel Messi")]})
-    r = a.ask("messi")
+    a, _ = asker({"haaland": [cand("player", "418560", "Erling Haaland")]})
+    r = a.ask("haaland")
     assert r["intent"] == "lookup" and "REGEX(" in r["sparql"]
 
 
@@ -215,8 +193,8 @@ def test_unrecognised_gives_suggestions():
 def test_nearest_suggestion_is_relevant():
     a, _ = asker()
     with pytest.raises(AskError) as e:
-        a.ask("scorrers in the premier leaguee")
-    assert "scorers" in e.value.suggestions[0].lower()
+        a.ask("trasnfers to arsnal")
+    assert "transfers" in e.value.suggestions[0].lower()
 
 
 def test_linked_uri_outside_the_namespace_is_ignored():
@@ -239,12 +217,12 @@ def test_question_length_is_bounded():
 # ---------- table shaping and HTTP ----------
 
 def test_answer_hides_uri_columns_and_links_labels():
-    final = result(["player", "playerLabel", "goals"], [
+    final = result(["player", "playerLabel", "value"], [
         {"player": {"type": "uri", "value": f"{R}player/1"}, "playerLabel": {"type": "literal", "value": "A B"},
-         "goals": {"type": "literal", "value": "1234", "datatype": "http://www.w3.org/2001/XMLSchema#integer"}}])
+         "value": {"type": "literal", "value": "1234", "datatype": "http://www.w3.org/2001/XMLSchema#integer"}}])
     a, _ = asker(final=final)
-    out = a.answer("top scorers")
-    assert out["vars"] == ["player", "goals"]
+    out = a.answer("most valuable players")
+    assert out["vars"] == ["player", "value"]
     assert out["rows"] == [[{"text": "A B", "href": "/page/player/1"}, {"text": "1,234", "href": None}]]
     assert out["truncated"] is False
 
@@ -254,7 +232,7 @@ def test_api_ask_endpoint():
     app = create_app(cfg=CFG, client=Fake(final=final))
     app.testing = True
     c = app.test_client()
-    ok = c.post("/api/ask", json={"question": "top scorers premier league 2023"})
+    ok = c.post("/api/ask", json={"question": "most valuable players premier league"})
     assert ok.status_code == 200
     body = ok.get_json()
     assert body["vars"] == ["player"] and body["sparql"].startswith("PREFIX")

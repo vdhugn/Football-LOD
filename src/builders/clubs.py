@@ -5,6 +5,7 @@ from common import clean, iri, lit, named_node, parse_net_transfer, t_dec, t_int
 def build(ctx):
     u = ctx.uris
     rows = {clean(r["club_id"]): r for r in ctx.csv("clubs.csv")}
+    known_comps = {clean(r["competition_id"]) for r in ctx.csv("competitions.csv")}
     with ctx.writer("clubs.ttl") as w:
         for cid in sorted(ctx.scope.club_ids):
             uri = u.res("club", cid)
@@ -18,6 +19,10 @@ def build(ctx):
                 w.node(stadium, ("fb:stadiumSeats", t_int(r["stadium_seats"])))
             manager = named_node(ctx, w, "manager", "fb:Manager", r["coach_name"])
             comp = clean(r["domestic_competition_id"])
+            if comp and comp not in known_comps and ctx.once("competition", comp):
+                # league missing from competitions.csv (e.g. COL1): minimal node so the reference resolves
+                ctx.notes["competition_minimal"] += 1
+                w.node(u.res("competition", comp), ("a", "fb:Competition"), ("rdfs:label", lit(comp, "und")))
             w.node(uri,
                    ("a", "fb:Club"),
                    ("rdfs:label", lit(r["name"], "und")),

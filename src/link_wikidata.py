@@ -198,8 +198,8 @@ def main():
     out = Path(cfg["out_dir"]) / "links"
     data_dir = Path(cfg["data_dir"])
 
-    nat_ids = {clean(r["national_team_id"]) for r in read_csv(data_dir / "national_teams.csv")} | scope.national_ids
-    comp_ids = {c["id"] for c in cfg["competitions"]}
+    nat_ids = {clean(r["national_team_id"]) for r in read_csv(data_dir / "national_teams.csv")}
+    comp_ids = set(cfg["scope"]["leagues"])
 
     players, amb_players = one_to_one(fetch_rows(PROP_PLAYER, scope.player_ids, cache, "player"))
     clubs, amb_clubs = one_to_one(fetch_rows(PROP_TEAM, scope.club_ids, cache, "club", with_venue=True))

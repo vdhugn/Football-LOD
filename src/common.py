@@ -33,12 +33,6 @@ def load_config(path="config.json"):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def expand_seasons(spec):
-    if isinstance(spec, dict):
-        return list(range(int(spec["from"]), int(spec["to"]) + 1))
-    return [int(s) for s in spec]
-
-
 def read_csv(path):
     with open(path, newline="", encoding="utf-8") as f:
         yield from csv.DictReader(f)
@@ -151,9 +145,6 @@ class Uris:
         if key is None:
             return None
         return f"<{self.base}{kind}/{quote(key, safe='-_.~')}>"
-
-    def team(self, game_kind, team_id):
-        return self.res("club" if game_kind == "club" else "national-team", team_id)
 
 
 class TurtleWriter:

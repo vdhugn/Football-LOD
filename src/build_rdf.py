@@ -2,7 +2,7 @@
 import argparse
 from pathlib import Path
 
-from builders import clubs, facts, matches, players, reference, transfers
+from builders import clubs, players, reference, transfers
 from common import BuildCtx, Uris, load_config
 from scope import Scope
 
@@ -10,9 +10,6 @@ STEPS = [
     ("reference.ttl", reference.build),
     ("clubs.ttl", clubs.build),
     ("players.ttl", players.build),
-    ("matches.ttl", matches.build),
-    ("appearances.ttl", facts.build_appearances),
-    ("events.ttl", facts.build_events),
     ("transfers.ttl", transfers.build_transfers),
     ("valuations.ttl", transfers.build_valuations),
 ]

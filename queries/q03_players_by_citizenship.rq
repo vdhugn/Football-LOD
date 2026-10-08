@@ -1,0 +1,9 @@
+PREFIX fb: <https://vdhugn.github.io/Football-LOD/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Countries with the most citizens playing in the top five leagues, with their national team if any
+SELECT ?country (COUNT(DISTINCT ?p) AS ?players) (COUNT(DISTINCT ?nt) AS ?inNationalTeam) WHERE {
+  ?p a fb:Player ; fb:citizenOf ?c .
+  ?c rdfs:label ?country .
+  OPTIONAL { ?p fb:representsNationalTeam ?nt }
+} GROUP BY ?country ORDER BY DESC(?players) LIMIT 20

@@ -2,10 +2,10 @@
 {% block content %}
 <section class="hero">
   <h1>Football Linked Open Data</h1>
-  <p>Browse players, clubs, competitions and matches, follow links to Wikidata and DBpedia, or query the data with SPARQL.</p>
+  <p>Browse players, clubs, stadiums, national teams, transfers and market values of the top five European leagues, follow links to Wikidata and DBpedia, or query the data with SPARQL.</p>
   <form class="ask" action="{{ url_for('query_page') }}" method="get" role="search">
     <input type="search" name="ask" maxlength="200" autocomplete="off" aria-label="Ask a question"
-           placeholder="Ask in plain English: top scorers Premier League 2023">
+           placeholder="Ask in plain English: most valuable players Premier League">
     <button type="submit">Ask</button>
   </form>
 </section>
